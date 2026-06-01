@@ -18,21 +18,13 @@
     {% endif %}
 </div>
 
-{# 概述 #}
-{% if s.overview %}
-<div class="overview-card">
-    <h2>📋 总体概述</h2>
-    <p class="overview-text">{{ s.overview }}</p>
-</div>
-{% endif %}
-
 <div class="columns">
     <div class="col-main">
 
         {# 要闻 #}
         {% if s.top_news %}
         <section class="section-card">
-            <h2>📌 要闻</h2>
+            <h2>📌 今日要闻</h2>
             <div class="top-news-list">
                 {% for item in s.top_news %}
                 <div class="news-item top-item">

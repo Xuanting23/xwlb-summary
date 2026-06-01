@@ -381,7 +381,12 @@ def get_history(limit: int = 30, offset: int = 0) -> list[dict]:
             d = dict(row) if _USE_PG else dict(row)
             if d.get("summary_json"):
                 summary = json.loads(d["summary_json"])
-                d["overview"] = summary.get("overview", "")
+                # overview 已移除，取 top_news 头条标题作为摘要预览
+                top_news = summary.get("top_news", [])
+                if top_news:
+                    d["overview"] = "、".join(item["title"] for item in top_news[:3])
+                else:
+                    d["overview"] = ""
                 d["keywords"] = summary.get("keywords", [])
                 del d["summary_json"]
             results.append(d)
