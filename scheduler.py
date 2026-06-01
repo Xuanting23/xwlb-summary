@@ -18,7 +18,7 @@ from config import (
 )
 from database import get_summary_by_date, mark_failed, save_raw_transcript, save_summary
 from fetcher import fetch_daily_transcript
-from summarizer import generate_summary
+from summarizer import generate_summary, match_segments_to_summary
 
 logger = logging.getLogger(__name__)
 
@@ -69,13 +69,16 @@ def _poll_and_summarize() -> None:
         logger.info(f"[轮询] {today_str} 文字稿暂未就绪，{POLL_INTERVAL_MINUTES} 分钟后重试")
         return
 
-    # 获取成功 → 保存原始稿
+    # 获取成功 → 保存原始稿（含分段）
     logger.info(f"[轮询] 成功获取 {today_str} 文字稿 (来源: {result['source']})")
-    save_raw_transcript(today, result["raw_text"], result["source"])
+    segments = result.get("segments", [])
+    save_raw_transcript(today, result["raw_text"], result["source"], segments)
 
-    # 生成 AI 摘要
+    # 生成 AI 摘要（传入分段以启用 segment_id 标注）
     logger.info(f"[轮询] 开始为 {today_str} 生成 AI 摘要...")
-    summary = generate_summary(result["raw_text"], today)
+    summary = generate_summary(result["raw_text"], today, segments=segments)
+    if summary and segments:
+        summary = match_segments_to_summary(summary, segments)
 
     if summary:
         save_summary(today, summary)

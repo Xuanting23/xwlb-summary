@@ -45,7 +45,15 @@
                         <div class="news-meta">
                             <span class="category-tag cat-{{ item.category }}">{{ item.category }}</span>
                             <span class="stars">{% for _ in range(item.importance | int) %}⭐{% endfor %}</span>
+                            {% if item.original_content %}
+                            <button class="toggle-original" onclick="toggleOriginal(this)">📄 原文</button>
+                            {% endif %}
                         </div>
+                        {% if item.original_content %}
+                        <div class="original-content" style="display:none">
+                            <div class="original-text">{{ item.original_content }}</div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -53,15 +61,17 @@
         </section>
         {% endif %}
 
-        {# 国内快讯 #}
-        {% if s.domestic_briefs %}
+        {# 国内快讯综述 #}
+        {% if s.domestic_briefs_summary %}
         <section class="section-card">
             <h2>🇨🇳 国内快讯</h2>
-            <ul class="brief-list">
-                {% for item in s.domestic_briefs %}
-                <li><strong>{{ item.title }}</strong>：{{ item.summary }}</li>
-                {% endfor %}
-            </ul>
+            <p class="briefs-summary-text">{{ s.domestic_briefs_summary }}</p>
+            {% if s.domestic_briefs_original %}
+            <button class="toggle-original block" onclick="toggleOriginal(this)">📄 查看快讯原文</button>
+            <div class="original-content" style="display:none">
+                <div class="original-text">{{ s.domestic_briefs_original }}</div>
+            </div>
+            {% endif %}
         </section>
         {% endif %}
 
@@ -75,7 +85,17 @@
                     <div class="news-body">
                         <h3>{{ item.title }}</h3>
                         <p class="news-summary">{{ item.summary }}</p>
-                        <span class="region-tag">{{ item.region }}</span>
+                        <div class="news-meta">
+                            <span class="region-tag">{{ item.region }}</span>
+                            {% if item.original_content %}
+                            <button class="toggle-original" onclick="toggleOriginal(this)">📄 原文</button>
+                            {% endif %}
+                        </div>
+                        {% if item.original_content %}
+                        <div class="original-content" style="display:none">
+                            <div class="original-text">{{ item.original_content }}</div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -83,15 +103,17 @@
         </section>
         {% endif %}
 
-        {# 国际快讯 #}
-        {% if s.international_briefs %}
+        {# 国际快讯综述 #}
+        {% if s.international_briefs_summary %}
         <section class="section-card">
             <h2>🌐 国际快讯</h2>
-            <ul class="brief-list">
-                {% for item in s.international_briefs %}
-                <li><strong>{{ item.title }}</strong>：{{ item.summary }}</li>
-                {% endfor %}
-            </ul>
+            <p class="briefs-summary-text">{{ s.international_briefs_summary }}</p>
+            {% if s.international_briefs_original %}
+            <button class="toggle-original block" onclick="toggleOriginal(this)">📄 查看快讯原文</button>
+            <div class="original-content" style="display:none">
+                <div class="original-text">{{ s.international_briefs_original }}</div>
+            </div>
+            {% endif %}
         </section>
         {% endif %}
 
@@ -111,6 +133,14 @@
         </div>
         {% endif %}
 
+        {# 直播入口 #}
+        <div class="side-card live-card">
+            <h2>📺 正在直播</h2>
+            <p class="live-hint">每晚 19:00-19:30，CCTV-1 / CCTV-13 并机直播</p>
+            <a href="https://tv.cctv.com/live/cctv13/" target="_blank" class="btn btn-live">📺 新闻频道 CCTV-13</a>
+            <a href="https://tv.cctv.com/live/cctv1/" target="_blank" class="btn btn-outline" style="margin-top:6px">📺 综合频道 CCTV-1</a>
+        </div>
+
         {# 快速导航 #}
         <div class="side-card">
             <h2>🔗 快速操作</h2>
@@ -129,8 +159,11 @@
     <div class="empty-icon">📭</div>
     <h1>暂无摘要数据</h1>
     <p>新闻联播每日总结将于每晚 19:30 后自动生成。</p>
-    <p class="text-muted">如需立即获取今日摘要，请点击下方按钮。</p>
-    <button onclick="manualFetch()" class="btn btn-primary btn-lg">🔄 立即获取今日摘要</button>
+    <p class="text-muted">在摘要生成之前，您可以先观看直播。</p>
+    <div class="empty-actions">
+        <a href="https://tv.cctv.com/live/cctv13/" target="_blank" class="btn btn-live btn-lg">📺 观看 CCTV-13 新闻直播</a>
+        <button onclick="manualFetch()" class="btn btn-primary btn-lg">🔄 立即获取今日摘要</button>
+    </div>
     <p id="fetch-status" class="fetch-status"></p>
 </div>
 {% endif %}
@@ -139,6 +172,19 @@
 
 {% block scripts %}
 <script>
+function toggleOriginal(btn) {
+    const container = btn.closest('.news-body') || btn.closest('li');
+    const original = container.querySelector('.original-content');
+    if (original) {
+        const isHidden = original.style.display === 'none';
+        original.style.display = isHidden ? 'block' : 'none';
+        btn.textContent = isHidden ? '📄 收起' : '📄 原文';
+        if (btn.classList.contains('small')) {
+            btn.textContent = isHidden ? '▲' : '📄';
+        }
+    }
+}
+
 async function manualFetch() {
     const btn = document.querySelector('button[onclick="manualFetch()"]');
     const status = document.getElementById('fetch-status');

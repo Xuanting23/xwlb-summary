@@ -9,7 +9,7 @@ from flask import Flask, jsonify, render_template, request
 
 from config import DATABASE_PATH, FLASK_DEBUG, FLASK_HOST, FLASK_PORT, LOG_LEVEL, SECRET_KEY
 from database import get_history, get_history_count, get_latest_summary, get_summary_by_date, init_db
-from summarizer import generate_summary
+from summarizer import generate_summary, match_segments_to_summary
 from fetcher import fetch_daily_transcript
 from database import save_raw_transcript, save_summary, mark_failed
 
@@ -123,12 +123,14 @@ def api_fetch_now():
         mark_failed(today)
         return jsonify({"error": "无法获取今日文字稿，请稍后重试"}), 503
 
-    # Step 2: 保存原始文字稿
-    save_raw_transcript(today, result["raw_text"], result["source"])
+    # Step 2: 保存原始文字稿（含分段）
+    segments = result.get("segments", [])
+    save_raw_transcript(today, result["raw_text"], result["source"], segments)
 
-    # Step 3: 生成 AI 摘要
-    summary = generate_summary(result["raw_text"], today)
-    if not summary:
+    # Step 3: 生成 AI 摘要（传入分段以启用 segment_id 标注）
+    summary = generate_summary(result["raw_text"], today, segments=segments)
+    if summary and segments:
+        summary = match_segments_to_summary(summary, segments)
         mark_failed(today)
         return jsonify({"error": "AI 摘要生成失败"}), 500
 

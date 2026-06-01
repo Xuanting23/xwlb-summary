@@ -31,6 +31,7 @@ def init_db() -> None:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 date TEXT UNIQUE NOT NULL,
                 raw_text TEXT,
+                segments_json TEXT,
                 summary_json TEXT,
                 source TEXT,
                 status TEXT DEFAULT 'pending',
@@ -49,30 +50,34 @@ def init_db() -> None:
         conn.close()
 
 
-def save_raw_transcript(target_date: date, raw_text: str, source: str) -> bool:
+def save_raw_transcript(target_date: date, raw_text: str, source: str,
+                        segments: list | None = None) -> bool:
     """
-    保存原始文字稿（获取成功后立即存储）。
+    保存原始文字稿及分段数据（获取成功后立即存储）。
 
     Args:
         target_date: 日期
         raw_text: 原始文字稿
         source: 数据来源
+        segments: 单条新闻分段列表 [{title, content}, ...]
 
     Returns:
         bool: 是否保存成功
     """
     conn = get_connection()
     try:
+        segments_json = json.dumps(segments, ensure_ascii=False) if segments else None
         conn.execute(
             """
-            INSERT INTO daily_summaries (date, raw_text, source, status)
-            VALUES (?, ?, ?, 'pending')
+            INSERT INTO daily_summaries (date, raw_text, segments_json, source, status)
+            VALUES (?, ?, ?, ?, 'pending')
             ON CONFLICT(date) DO UPDATE SET
                 raw_text = excluded.raw_text,
+                segments_json = excluded.segments_json,
                 source = excluded.source,
                 updated_at = CURRENT_TIMESTAMP
             """,
-            (target_date.isoformat(), raw_text, source),
+            (target_date.isoformat(), raw_text, segments_json, source),
         )
         conn.commit()
         logger.info(f"已保存 {target_date.isoformat()} 的原始文字稿 (来源: {source})")
@@ -242,9 +247,12 @@ def get_history_count() -> int:
 
 
 def _row_to_dict(row: sqlite3.Row) -> dict:
-    """将数据库行转换为 dict，解析 summary_json。"""
+    """将数据库行转换为 dict，解析 summary_json 和 segments_json。"""
     d = dict(row)
     if d.get("summary_json"):
         d["summary"] = json.loads(d["summary_json"])
     del d["summary_json"]
+    if d.get("segments_json"):
+        d["segments"] = json.loads(d["segments_json"])
+    del d["segments_json"]
     return d

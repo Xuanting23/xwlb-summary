@@ -1,6 +1,7 @@
 """
 新闻联播文字稿获取模块
 首选 AkShare，备选 cn.govopendata.com
+返回完整文字稿 + 单条新闻分段列表
 """
 
 import logging
@@ -21,7 +22,7 @@ def fetch_via_akshare(target_date: date) -> Optional[dict]:
         target_date: 目标日期
 
     Returns:
-        dict: {date, raw_text, source, fetch_time} 或 None
+        dict: {date, raw_text, segments, source, fetch_time} 或 None
     """
     try:
         import akshare as ak
@@ -35,8 +36,9 @@ def fetch_via_akshare(target_date: date) -> Optional[dict]:
             logger.warning(f"[AkShare] {date_str} 返回空数据（可能停播）")
             return None
 
-        # 拼接标题+内容为完整文字稿
+        # 拼接标题+内容为完整文字稿，同时保留分段
         parts = []
+        segments = []
         for _, row in df.iterrows():
             title = str(row.get("title", "")).strip()
             content = str(row.get("content", "")).strip()
@@ -46,6 +48,8 @@ def fetch_via_akshare(target_date: date) -> Optional[dict]:
                 parts.append(content)
             if title or content:
                 parts.append("")  # 空行分隔
+            if title and content:
+                segments.append({"title": title, "content": content})
 
         raw_text = "\n".join(parts).strip()
 
@@ -53,10 +57,14 @@ def fetch_via_akshare(target_date: date) -> Optional[dict]:
             logger.warning(f"[AkShare] {date_str} 文字稿内容为空")
             return None
 
-        logger.info(f"[AkShare] 成功获取 {date_str} 的文字稿，共 {len(raw_text)} 字")
+        logger.info(
+            f"[AkShare] 成功获取 {date_str} 的文字稿，"
+            f"共 {len(raw_text)} 字，{len(segments)} 条新闻"
+        )
         return {
             "date": target_date.isoformat(),
             "raw_text": raw_text,
+            "segments": segments,
             "source": "akshare",
             "fetch_time": datetime.now().isoformat(),
         }
@@ -125,6 +133,7 @@ def fetch_via_govopendata(target_date: date) -> Optional[dict]:
         return {
             "date": target_date.isoformat(),
             "raw_text": text,
+            "segments": [],  # govopendata 无法提取分段
             "source": "govopendata",
             "fetch_time": datetime.now().isoformat(),
         }
