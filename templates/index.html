@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}今日摘要 — 新闻联播每日总结{% endblock %}
+
+{% block content %}
+
+{% if summary %}
+<div class="summary-header">
+    <h1 class="date-title">
+        📅 {{ summary.date }}
+        <span class="date-weekday">新闻联播摘要</span>
+    </h1>
+    <div class="meta-info">
+        <span class="meta-item">数据来源：{{ summary.source }}</span>
+        {% if summary.summary and summary.summary._meta %}
+        <span class="meta-item">模型：{{ summary.summary._meta.model }}</span>
+        <span class="meta-item">生成时间：{{ summary.summary._meta.generated_at[:19] | replace('T', ' ') }}</span>
+        {% endif %}
+    </div>
+</div>
+
+{% set s = summary.summary %}
+
+{# 总体概述 #}
+{% if s.overview %}
+<div class="overview-card">
+    <h2>📋 今日概述</h2>
+    <p class="overview-text">{{ s.overview }}</p>
+</div>
+{% endif %}
+
+<div class="columns">
+    <div class="col-main">
+
+        {# Top 要闻 #}
+        {% if s.top_news %}
+        <section class="section-card">
+            <h2>📌 今日要闻</h2>
+            <div class="top-news-list">
+                {% for item in s.top_news %}
+                <div class="news-item top-item">
+                    <div class="news-rank">{{ loop.index }}</div>
+                    <div class="news-body">
+                        <h3>{{ item.title }}</h3>
+                        <p class="news-summary">{{ item.summary }}</p>
+                        <div class="news-meta">
+                            <span class="category-tag cat-{{ item.category }}">{{ item.category }}</span>
+                            <span class="stars">{% for _ in range(item.importance | int) %}⭐{% endfor %}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {# 国内快讯 #}
+        {% if s.domestic_briefs %}
+        <section class="section-card">
+            <h2>🇨🇳 国内快讯</h2>
+            <ul class="brief-list">
+                {% for item in s.domestic_briefs %}
+                <li><strong>{{ item.title }}</strong>：{{ item.summary }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        {# 国际新闻 #}
+        {% if s.international_news %}
+        <section class="section-card">
+            <h2>🌍 国际新闻</h2>
+            <div class="intl-news-list">
+                {% for item in s.international_news %}
+                <div class="news-item intl-item">
+                    <div class="news-body">
+                        <h3>{{ item.title }}</h3>
+                        <p class="news-summary">{{ item.summary }}</p>
+                        <span class="region-tag">{{ item.region }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {# 国际快讯 #}
+        {% if s.international_briefs %}
+        <section class="section-card">
+            <h2>🌐 国际快讯</h2>
+            <ul class="brief-list">
+                {% for item in s.international_briefs %}
+                <li><strong>{{ item.title }}</strong>：{{ item.summary }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+    </div>
+
+    <aside class="col-side">
+
+        {# 关键词 #}
+        {% if s.keywords %}
+        <div class="side-card">
+            <h2>🔑 今日关键词</h2>
+            <div class="keyword-cloud">
+                {% for kw in s.keywords %}
+                <span class="keyword-tag">{{ kw }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# 快速导航 #}
+        <div class="side-card">
+            <h2>🔗 快速操作</h2>
+            <div class="quick-actions">
+                <a href="/history" class="btn btn-outline">📅 查看历史</a>
+                <button onclick="manualFetch()" class="btn btn-primary">🔄 立即刷新</button>
+            </div>
+            <p id="fetch-status" class="fetch-status"></p>
+        </div>
+
+    </aside>
+</div>
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h1>暂无摘要数据</h1>
+    <p>新闻联播每日总结将于每晚 19:30 后自动生成。</p>
+    <p class="text-muted">如需立即获取今日摘要，请点击下方按钮。</p>
+    <button onclick="manualFetch()" class="btn btn-primary btn-lg">🔄 立即获取今日摘要</button>
+    <p id="fetch-status" class="fetch-status"></p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function manualFetch() {
+    const btn = document.querySelector('button[onclick="manualFetch()"]');
+    const status = document.getElementById('fetch-status');
+    if (!btn || !status) return;
+
+    btn.disabled = true;
+    btn.textContent = '⏳ 获取中...';
+    status.textContent = '';
+
+    try {
+        const resp = await fetch('/api/fetch-now', { method: 'POST' });
+        const data = await resp.json();
+
+        if (resp.ok) {
+            status.textContent = '✅ ' + data.message + ' — 页面即将刷新';
+            status.className = 'fetch-status success';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            status.textContent = '❌ ' + (data.error || '操作失败');
+            status.className = 'fetch-status error';
+        }
+    } catch (e) {
+        status.textContent = '❌ 网络错误，请稍后重试';
+        status.className = 'fetch-status error';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 立即刷新';
+    }
+}
+</script>
+{% endblock %}

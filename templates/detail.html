@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}{{ date_str }} 详情 — 新闻联播每日总结{% endblock %}
+
+{% block content %}
+
+<a href="/history" class="back-link">← 返回历史列表</a>
+
+{% if record %}
+{% set s = record.summary %}
+
+<h1 class="page-title">{{ date_str }} 新闻联播摘要</h1>
+
+<div class="detail-meta">
+    <span>数据来源：{{ record.source }}</span>
+    {% if s._meta %}
+    <span>模型：{{ s._meta.model }}</span>
+    <span>生成时间：{{ s._meta.generated_at[:19] | replace('T', ' ') }}</span>
+    {% endif %}
+</div>
+
+{# 概述 #}
+{% if s.overview %}
+<div class="overview-card">
+    <h2>📋 总体概述</h2>
+    <p class="overview-text">{{ s.overview }}</p>
+</div>
+{% endif %}
+
+<div class="columns">
+    <div class="col-main">
+
+        {% if s.top_news %}
+        <section class="section-card">
+            <h2>📌 要闻</h2>
+            <div class="top-news-list">
+                {% for item in s.top_news %}
+                <div class="news-item top-item">
+                    <div class="news-rank">{{ loop.index }}</div>
+                    <div class="news-body">
+                        <h3>{{ item.title }}</h3>
+                        <p class="news-summary">{{ item.summary }}</p>
+                        <div class="news-meta">
+                            <span class="category-tag cat-{{ item.category }}">{{ item.category }}</span>
+                            <span class="stars">{% for _ in range(item.importance | int) %}⭐{% endfor %}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if s.domestic_briefs %}
+        <section class="section-card">
+            <h2>🇨🇳 国内快讯</h2>
+            <ul class="brief-list">
+                {% for item in s.domestic_briefs %}
+                <li><strong>{{ item.title }}</strong>：{{ item.summary }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        {% if s.international_news %}
+        <section class="section-card">
+            <h2>🌍 国际新闻</h2>
+            <div class="intl-news-list">
+                {% for item in s.international_news %}
+                <div class="news-item intl-item">
+                    <div class="news-body">
+                        <h3>{{ item.title }}</h3>
+                        <p class="news-summary">{{ item.summary }}</p>
+                        <span class="region-tag">{{ item.region }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if s.international_briefs %}
+        <section class="section-card">
+            <h2>🌐 国际快讯</h2>
+            <ul class="brief-list">
+                {% for item in s.international_briefs %}
+                <li><strong>{{ item.title }}</strong>：{{ item.summary }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        {# 原始文字稿（可折叠） #}
+        {% if record.raw_text %}
+        <section class="section-card">
+            <details>
+                <summary class="raw-toggle">📄 查看原始文字稿</summary>
+                <pre class="raw-text">{{ record.raw_text }}</pre>
+            </details>
+        </section>
+        {% endif %}
+
+    </div>
+
+    <aside class="col-side">
+        {% if s.keywords %}
+        <div class="side-card">
+            <h2>🔑 关键词</h2>
+            <div class="keyword-cloud">
+                {% for kw in s.keywords %}
+                <span class="keyword-tag">{{ kw }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+</div>
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h2>未找到 {{ date_str }} 的摘要</h2>
+    <p>该日期可能暂无数据，或新闻联播当日停播。</p>
+    <a href="/history" class="btn btn-outline">返回历史列表</a>
+</div>
+{% endif %}
+
+{% endblock %}

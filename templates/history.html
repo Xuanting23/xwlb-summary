@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}历史回顾 — 新闻联播每日总结{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">📅 历史回顾</h1>
+<p class="page-subtitle">共 {{ total }} 期摘要</p>
+
+{% if items %}
+<div class="history-list">
+    {% for item in items %}
+    <a href="/detail/{{ item.date }}" class="history-card">
+        <div class="history-date">
+            <span class="date-big">{{ item.date[-2:] }}</span>
+            <span class="date-small">{{ item.date[:7] }}</span>
+        </div>
+        <div class="history-body">
+            <p class="history-overview">{{ item.overview or '暂无概述' }}</p>
+            {% if item.keywords %}
+            <div class="history-keywords">
+                {% for kw in item.keywords %}
+                <span class="keyword-tag small">{{ kw }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <div class="history-arrow">›</div>
+    </a>
+    {% endfor %}
+</div>
+
+{# 分页 #}
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/history?page={{ page - 1 }}" class="page-link">← 上一页</a>
+    {% endif %}
+    <span class="page-info">{{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="/history?page={{ page + 1 }}" class="page-link">下一页 →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h2>暂无历史记录</h2>
+    <p>摘要生成后将自动出现在这里。</p>
+</div>
+{% endif %}
+
+{% endblock %}
