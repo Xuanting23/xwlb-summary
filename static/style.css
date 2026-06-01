@@ -371,26 +371,19 @@ nav { display: flex; gap: 8px; }
 }
 
 .btn-live {
-    background: #e8453c;
+    background: var(--primary);
     color: white;
-    animation: live-pulse 2s infinite;
 }
 .btn-live:hover {
-    background: #c41e3a;
+    background: var(--primary-light);
     color: white;
-}
-
-@keyframes live-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(232, 69, 60, 0.4); }
-    50%      { box-shadow: 0 0 0 8px rgba(232, 69, 60, 0); }
 }
 
 /* --- 直播卡片 --- */
 .live-card {
-    background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
-    border: 1px solid #fecaca;
+    background: linear-gradient(135deg, #f0f4f8 0%, #fff 100%);
+    border: 1px solid #d0dbe8;
 }
-
 .live-hint {
     font-size: 0.8rem;
     color: #999;
@@ -400,12 +393,13 @@ nav { display: flex; gap: 8px; }
 
 /* --- 导航栏直播链接 --- */
 .live-link {
-    background: rgba(232, 69, 60, 0.85) !important;
-    color: white !important;
+    background: rgba(255,255,255,0.12);
+    color: white;
     font-weight: 600;
 }
 .live-link:hover {
-    background: #e8453c !important;
+    background: rgba(255,255,255,0.2);
+    color: white;
 }
 
 /* --- 空状态下操作按钮组 --- */
@@ -658,4 +652,172 @@ details { cursor: pointer; }
     max-height: 600px;
     overflow-y: auto;
     color: #444;
+}
+
+
+/* ============================================================
+   移动端优化 (≤768px)
+   ============================================================ */
+@media (max-width: 768px) {
+
+    /* --- 导航栏精简 --- */
+    .site-header {
+        padding: 8px 0;
+    }
+
+    .container {
+        padding: 0 12px;
+    }
+
+    .logo {
+        font-size: 0.95rem;
+        gap: 5px;
+    }
+
+    .logo-icon { font-size: 1.2rem; }
+
+    /* 手机端隐藏 logo 文字，只保留图标 */
+    .logo-text {
+        display: none;
+    }
+
+    nav { gap: 2px; }
+
+    .nav-link {
+        padding: 5px 10px;
+        font-size: 0.82rem;
+        border-radius: 16px;
+    }
+
+    /* --- 主体间距缩减 --- */
+    .site-main {
+        padding: 16px 0 24px;
+    }
+
+    /* --- 日期标题缩小 --- */
+    .date-title {
+        font-size: 1.4rem;
+    }
+
+    .date-weekday {
+        font-size: 0.85rem;
+        margin-left: 6px;
+    }
+
+    /* --- 概述卡片缩小 --- */
+    .overview-card {
+        padding: 16px 18px;
+    }
+
+    .overview-text {
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    /* --- 内容区卡片缩减内边距 --- */
+    .section-card {
+        padding: 16px;
+        margin-bottom: 14px;
+    }
+
+    .section-card h2 {
+        font-size: 1.05rem;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+    }
+
+    /* === 要闻板块手机端优化：字体舒展 + 间距调整 === */
+    .top-news-list {
+        gap: 12px;
+    }
+
+    .news-item {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .news-rank {
+        width: 30px;
+        height: 30px;
+        font-size: 0.82rem;
+        flex-shrink: 0;
+    }
+
+    .news-body h3 {
+        font-size: 1rem;
+        line-height: 1.55;
+        margin-bottom: 6px;
+        letter-spacing: 0.015em;
+    }
+
+    .news-summary {
+        font-size: 0.92rem;
+        line-height: 1.7;
+        letter-spacing: 0.01em;
+    }
+
+    .news-meta {
+        margin-top: 8px;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    /* === 快讯列表手机端优化 === */
+    .brief-list {
+        gap: 8px;
+    }
+
+    .brief-list li {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        line-height: 1.7;
+    }
+
+    /* === 国际新闻手机端优化 === */
+    .intl-news-list {
+        gap: 10px;
+    }
+
+    /* --- 侧边栏 --- */
+    .side-card {
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+    .side-card h2 {
+        font-size: 0.95rem;
+        margin-bottom: 10px;
+    }
+
+    /* --- 空状态 --- */
+    .empty-state {
+        padding: 40px 16px;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+    }
+
+    .empty-state h1 {
+        font-size: 1.3rem;
+    }
+
+    .empty-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* --- 原文展示区域 --- */
+    .original-text {
+        font-size: 0.85rem;
+        line-height: 1.7;
+        padding: 10px 12px;
+    }
+
+    /* --- 页脚 --- */
+    .site-footer {
+        font-size: 0.75rem;
+        padding: 12px 0;
+    }
+
 }
