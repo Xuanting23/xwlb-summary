@@ -18,6 +18,21 @@
     --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.1);
     --radius: 10px;
     --transition: 0.2s ease;
+
+    /* Pico.css 主题覆盖 — 匹配深蓝+红色调 */
+    --pico-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                        "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    --pico-primary: #c41e3a;
+    --pico-primary-hover: #e8453c;
+    --pico-primary-focus: rgba(196, 30, 58, 0.25);
+    --pico-primary-inverse: #ffffff;
+    --pico-color: #2c3e50;
+    --pico-muted-color: #7f8c8d;
+    --pico-background-color: #f4f5f7;
+    --pico-card-background-color: #ffffff;
+    --pico-card-border-color: #e1e4e8;
+    --pico-card-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --pico-border-radius: 10px;
 }
 
 * {
