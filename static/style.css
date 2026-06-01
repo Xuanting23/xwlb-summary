@@ -33,6 +33,8 @@
     --pico-card-border-color: #e1e4e8;
     --pico-card-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     --pico-border-radius: 10px;
+    --pico-spacing: 1rem;
+    --pico-block-spacing-vertical: 1rem;
 }
 
 * {
@@ -833,6 +835,23 @@ details { cursor: pointer; }
     .site-footer {
         font-size: 0.75rem;
         padding: 12px 0;
+    }
+
+    /* --- Pico.css 移动端微调 --- */
+    --pico-spacing: 0.75rem;
+    --pico-block-spacing-vertical: 0.75rem;
+
+    /* Pico 的 article/section 在移动端不额外留白 */
+    article, section {
+        margin-bottom: 14px;
+    }
+
+    /* Pico 按钮在移动端保持全宽 */
+    .btn {
+        width: 100%;
+    }
+    .btn-lg {
+        width: auto;
     }
 
 }
