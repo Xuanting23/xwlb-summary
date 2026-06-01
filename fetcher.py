@@ -134,6 +134,7 @@ def fetch_via_cctv(target_date: date) -> Optional[dict]:
         logger.info(f"[CCTV] 找到 {len(news_links)} 条新闻链接，开始逐条抓取...")
 
         segments = []
+        skipped = []  # 记录跳过的链接及原因
         for idx, nl in enumerate(news_links):
             try:
                 item_resp = requests.get(
@@ -150,20 +151,43 @@ def fetch_via_cctv(target_date: date) -> Optional[dict]:
                 item_resp.encoding = "utf-8"
                 item_soup = BeautifulSoup(item_resp.text, "lxml")
 
-                # 提取标题
-                h3 = item_soup.find("h3")
-                title = h3.get_text(strip=True) if h3 else nl["title"]
+                # 提取标题（尝试多种选择器）
+                title = nl["title"]
+                for title_sel in ["h3", "h1", "h2", ".title", ".cnt_title", "title"]:
+                    h_tag = item_soup.find(title_sel) if title_sel.startswith(".") else item_soup.find(title_sel)
+                    if not h_tag and title_sel.startswith("."):
+                        h_tag = item_soup.find(class_=title_sel[1:])
+                    if h_tag:
+                        t = h_tag.get_text(strip=True)
+                        if t and len(t) >= 4:
+                            title = t
+                            break
                 title = title.replace("[视频]", "").strip()
 
-                # 提取正文（多种可能的容器）
-                content_div = (
-                    item_soup.find("div", class_="cnt_bd") or
-                    item_soup.find("div", class_="content_area") or
-                    item_soup.find("div", class_="allcontent") or
-                    item_soup.find("div", class_="video-content") or
-                    item_soup.find("article") or
-                    item_soup.find("div", class_="text")
-                )
+                # 提取正文（多种可能的容器，按优先级尝试）
+                content_div_selectors = [
+                    ("div", "cnt_bd"),
+                    ("div", "content_area"),
+                    ("div", "allcontent"),
+                    ("div", "video-content"),
+                    ("div", "video_content"),
+                    ("div", "content"),
+                    ("div", "text"),
+                    ("div", "article-content"),
+                    ("div", "main_content"),
+                    ("div", "detail_content"),
+                    ("article", None),
+                    ("section", "content"),
+                ]
+                content_div = None
+                for tag_name, cls in content_div_selectors:
+                    if cls:
+                        content_div = item_soup.find(tag_name, class_=cls)
+                    else:
+                        content_div = item_soup.find(tag_name)
+                    if content_div:
+                        break
+
                 if content_div:
                     for tag in content_div(["script", "style"]):
                         tag.decompose()
@@ -177,33 +201,115 @@ def fetch_via_cctv(target_date: date) -> Optional[dict]:
 
                     for prefix in ["央视网消息（新闻联播）：", "央视网消息(新闻联播)：",
                                    "央视网消息（新闻联播）", "央视网消息(新闻联播)",
-                                   "央视网消息:"]:
+                                   "央视网消息:", "央视网消息（"]:
                         if content.startswith(prefix):
                             content = content[len(prefix):].strip()
+
+                    # 如果 div 提取的内容也过短，尝试用 p 标签
+                    if len(content) < 20:
+                        paras = item_soup.find_all("p")
+                        p_text = "\n".join(p.get_text(strip=True) for p in paras if p.get_text(strip=True))
+                        if len(p_text) > len(content):
+                            content = p_text.strip()
                 else:
                     # 回退：取所有 p 标签文本
                     paras = item_soup.find_all("p")
                     content = "\n".join(p.get_text(strip=True) for p in paras if p.get_text(strip=True))
                     if not content:
+                        # 进一步回退：取 body 文本
                         body = item_soup.find("body")
                         if body:
                             for tag in body(["script", "style", "nav", "header", "footer"]):
                                 tag.decompose()
-                        content = body.get_text(separator="\n", strip=True) if body else ""
+                            content = body.get_text(separator="\n", strip=True) if body else ""
+                        else:
+                            content = ""
 
-                # 过滤掉过短的内容（可能是纯视频无文字稿）
+                # 记录跳过的链接及原因
                 if len(content) < 20:
+                    reason = f"内容过短({len(content)}字)"
+                    skipped.append((nl["title"][:40], nl["url"][-50:], reason))
+                    logger.warning(f"[CCTV] 跳过 [{idx}] {nl['title'][:40]}: {reason}")
+                    continue
+
+                # 去重：如果内容与已有分段高度重叠，跳过
+                content_head = content[:60]
+                is_dup = any(content_head[:30] in s["content"][:60] for s in segments)
+                if is_dup:
+                    reason = "内容与已抓取分段重复"
+                    skipped.append((nl["title"][:40], nl["url"][-50:], reason))
+                    logger.warning(f"[CCTV] 跳过 [{idx}] {nl['title'][:40]}: {reason}")
                     continue
 
                 if content:
                     segments.append({"title": title, "content": content})
 
-            except Exception as e:
-                logger.warning(f"[CCTV] 抓取 {nl['url'][-30:]} 失败: {e}")
+            except requests.RequestException as e:
+                reason = f"网络错误: {e}"
+                skipped.append((nl["title"][:40], nl["url"][-50:], reason))
+                logger.warning(f"[CCTV] 抓取 [{idx}] {nl['title'][:40]} 失败: {reason}")
                 continue
+            except Exception as e:
+                reason = f"解析异常: {e}"
+                skipped.append((nl["title"][:40], nl["url"][-50:], reason))
+                logger.warning(f"[CCTV] 抓取 [{idx}] {nl['title'][:40]} 失败: {reason}")
+                continue
+
+        # 汇总日志
+        if skipped:
+            logger.warning(
+                f"[CCTV] 抓取汇总: {len(segments)}/{len(news_links)} 成功, "
+                f"{len(skipped)} 条被跳过"
+            )
+            for i, (title, url_tail, reason) in enumerate(skipped):
+                logger.warning(f"[CCTV]   跳过[{i}]: {title} | {reason} | ...{url_tail}")
 
         if not segments:
             logger.warning("[CCTV] 未能提取任何分段内容")
+            return None
+
+        # 过滤掉非新闻内容的分段（节目片头、纯导航页等）
+        filtered_segments = []
+        for seg in segments:
+            title = seg.get("title", "")
+            content = seg.get("content", "")
+
+            # 跳过节目片头/内容提要（如"《新闻联播》 20260601 19:00"）
+            # 标志：标题含"新闻联播"且内容以"本期节目主要内容"开头
+            if "新闻联播" in title and "本期节目主要内容" in content[:100]:
+                logger.info(f"[CCTV] 过滤节目片头/提要: {title[:50]}")
+                continue
+
+            # 跳过明显不是新闻内容的纯导航/广告文字
+            if len(content) < 10:
+                logger.info(f"[CCTV] 过滤过短分段: {title[:50]} ({len(content)}字)")
+                continue
+
+            # 清洗正文中的网页UI残留文字
+            for boilerplate in [
+                "查看更多评论", "京ICP备", "中央广播电视总台央视网版权所有",
+                "央视网版权所有", "返回顶部", "扫一扫", "分享到",
+            ]:
+                pos = content.find(boilerplate)
+                if pos >= 0:
+                    content = content[:pos].strip()
+
+            # 如果清洗后内容过短则跳过
+            if len(content) < 10:
+                logger.info(f"[CCTV] 过滤清洗后过短分段: {title[:50]}")
+                continue
+
+            seg["content"] = content
+            filtered_segments.append(seg)
+
+        if len(filtered_segments) < len(segments):
+            logger.info(
+                f"[CCTV] 过滤后: {len(filtered_segments)}/{len(segments)} 条有效分段"
+            )
+        segments = filtered_segments
+
+        if not segments:
+            logger.warning("[CCTV] 过滤后无有效分段")
             return None
 
         # 拼接完整文字稿
