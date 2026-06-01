@@ -252,17 +252,107 @@ def _extract_relevant_passage(content: str, title: str, summary: str, window: in
     return passage if passage else content
 
 
+def _find_title_boundaries(content: str, items: list) -> list[dict]:
+    """在分段原文中按标题/关键信息定位每条摘要的起止边界，返回排序后的切片。"""
+    boundaries = []
+    for idx, item in enumerate(items):
+        title = item.get("title", "")
+        best_pos = -1
+        best_len = 0
+
+        # 策略 A: 标题子串精确匹配（从长到短）
+        for length in range(len(title), 2, -1):
+            for offset in range(0, len(title) - length + 1):
+                sub = title[offset:offset + length]
+                pos = content.find(sub)
+                if pos != -1 and length > best_len:
+                    best_pos = pos
+                    best_len = length
+
+        # 策略 B: 字符级模糊匹配 — 取标题每个字，在原文中找首次出现的聚集位置
+        if best_pos < 0:
+            chars = [ch for ch in title if len(ch.strip()) >= 0]
+            first_pos = -1
+            for ch in chars[:6]:  # 用前6个字定位
+                p = content.find(ch)
+                if p != -1 and (first_pos < 0 or p < first_pos):
+                    first_pos = p
+            if first_pos >= 0:
+                # 从 first_pos 向前找句子开头
+                for ch2 in chars[:3]:
+                    p2 = content.rfind(ch2, 0, first_pos + 10)
+                    if p2 >= 0 and p2 < first_pos:
+                        first_pos = p2
+                best_pos = first_pos
+                best_len = 1
+
+        # 策略 C: 摘要关键词搜索
+        if best_pos < 0:
+            summary = item.get("summary", "")
+            for length in range(min(len(summary), 40), 3, -1):
+                for offset in range(0, len(summary) - length + 1):
+                    sub = summary[offset:offset + length]
+                    pos = content.find(sub)
+                    if pos != -1:
+                        best_pos = pos
+                        best_len = length
+                        break
+                if best_pos >= 0:
+                    break
+
+        if best_pos >= 0:
+            boundaries.append({"idx": idx, "pos": best_pos,
+                               "match": content[best_pos:best_pos+min(best_len,40)],
+                               "len": best_len})
+
+    # 按位置排序
+    boundaries.sort(key=lambda b: b["pos"])
+    return boundaries
+
+
+def _split_shared_segment(content: str, items: list) -> None:
+    """
+    将共享同一个分段的多个条目按原标题边界精确切分，
+    每条只取自己对应的原文片段。原地修改 item['original_content']。
+    多条拼接后 = 分段全文，一字不漏。
+    """
+    if len(items) <= 1:
+        for item in items:
+            item["original_content"] = content
+        return
+
+    boundaries = _find_title_boundaries(content, items)
+    if len(boundaries) < 2:
+        # 无法可靠切分，保持完整分段（降级）
+        for item in items:
+            item["original_content"] = content
+        return
+
+    # 为每条分配片段：从自己的边界到下一条的边界（第一条从 0 开始，最后一条到文末）
+    for bi, b in enumerate(boundaries):
+        start = 0 if bi == 0 else b["pos"]
+        end = boundaries[bi + 1]["pos"] if bi + 1 < len(boundaries) else len(content)
+        snippet = content[start:end]
+        items[b["idx"]]["original_content"] = snippet
+
+    # 未匹配到的条目用完整分段兜底
+    matched_indices = {b["idx"] for b in boundaries}
+    for i, item in enumerate(items):
+        if i not in matched_indices or not item.get("original_content"):
+            item["original_content"] = content
+
+
 def match_segments_to_summary(summary: dict, segments: list) -> dict:
     """
-    为 AI 摘要每个条目匹配原始分段，使用完整分段原文（一字不漏）。
+    为 AI 摘要每个条目匹配原始分段原文。
 
     匹配策略（按优先级）：
     1. AI 标注的 segment_id → 直接取该分段完整原文
     2. 综合模糊评分 → 标题+关键词+摘要文本
     3. 内容子串搜索 → 在分段正文中查找标题关键词
 
-    所有匹配均使用完整分段原文，不做截取。
-    验证所有分段均被至少一条摘要引用，确保 100% 覆盖率。
+    关键：当一个分段被多条摘要共享时，按标题边界精确切分，
+    每条只拿自己的片段。拼接后 = 分段全文，一字不漏。
     """
     if not segments:
         return summary
@@ -273,63 +363,88 @@ def match_segments_to_summary(summary: dict, segments: list) -> dict:
         for item in summary.get(cat, []):
             all_items.append((cat, item))
 
+    # ---- 阶段 1: 初始匹配（整段分配） ----
     segment_hits = 0
     fuzzy_hits = 0
     content_hits = 0
 
+    # 记录每个分段被哪些条目标注（用于后续切分）
+    seg_to_items: dict[int, list[dict]] = {i: [] for i in range(len(segments))}
+
     for category, item in all_items:
-        # ---- 策略 1: AI 的 segment_id ----
+        matched_seg = None
+
+        # 策略 1: AI 的 segment_id
         seg_id = item.pop("segment_id", None)
         if seg_id is not None and isinstance(seg_id, int) and 0 <= seg_id < len(segments):
-            item["original_content"] = segments[seg_id]["content"]
+            matched_seg = seg_id
             segment_hits += 1
+
+        # 策略 2: 综合模糊评分
+        if matched_seg is None:
+            best_score, best_seg_idx = 0, -1
+            for i, seg in enumerate(segments):
+                score = _composite_score(item, seg)
+                if score > best_score:
+                    best_score = score
+                    best_seg_idx = i
+            threshold = 0.20 if category in ("top_news", "international_news") else 0.10
+            if best_score >= threshold and best_seg_idx >= 0:
+                matched_seg = best_seg_idx
+                fuzzy_hits += 1
+
+        # 策略 3: 内容子串搜索
+        if matched_seg is None:
+            title = item.get("title", "")
+            keywords = [title[i:i+3] for i in range(0, max(len(title)-2, 0), 2) if len(title[i:i+3]) >= 3]
+            for seg_idx, seg in enumerate(segments):
+                if any(kw in seg["content"] for kw in keywords):
+                    matched_seg = seg_idx
+                    content_hits += 1
+                    break
+
+        if matched_seg is not None:
+            seg_to_items[matched_seg].append(item)
+
+    # ---- 阶段 2: 按分段切分原文 ----
+    for seg_idx, items in seg_to_items.items():
+        if not items:
             continue
+        content = segments[seg_idx]["content"]
+        _split_shared_segment(content, items)
 
-        # ---- 策略 2: 综合模糊评分 ----
-        best_score, best_seg_idx = 0, -1
-        for i, seg in enumerate(segments):
-            score = _composite_score(item, seg)
-            if score > best_score:
-                best_score = score
-                best_seg_idx = i
-
-        threshold = 0.20 if category in ("top_news", "international_news") else 0.10
-        if best_score >= threshold and best_seg_idx >= 0:
-            item["original_content"] = segments[best_seg_idx]["content"]
-            fuzzy_hits += 1
-            continue
-
-        # ---- 策略 3: 内容子串搜索 ----
-        title = item.get("title", "")
-        keywords = [title[i:i+3] for i in range(0, max(len(title)-2, 0), 2) if len(title[i:i+3]) >= 3]
-        for seg in segments:
-            content = seg.get("content", "")
-            if any(kw in content for kw in keywords):
-                item["original_content"] = seg["content"]
-                content_hits += 1
-                break
-
-    # ---- 覆盖率验证：检查每个分段是否至少被一条摘要引用 ----
+    # ---- 阶段 3: 覆盖率验证 ----
     total_chars = sum(len(seg["content"]) for seg in segments)
     referenced = [False] * len(segments)
-    for category, item in all_items:
-        for i, seg in enumerate(segments):
-            if item.get("original_content") == seg["content"]:
-                referenced[i] = True
+    for seg_idx, items in seg_to_items.items():
+        if items:
+            referenced[seg_idx] = True
 
     covered_segments = sum(referenced)
     covered_chars = sum(len(seg["content"]) for i, seg in enumerate(segments) if referenced[i])
     coverage_pct = round(covered_chars / max(total_chars, 1) * 100, 1)
-
     uncovered = [i for i, ref in enumerate(referenced) if not ref]
 
-    # 统计各板块匹配情况
+    # 计算每个分段内切分的片段总长度
+    for seg_idx in range(len(segments)):
+        items = seg_to_items.get(seg_idx, [])
+        if len(items) > 1:
+            split_total = sum(len(it.get("original_content", "")) for it in items)
+            seg_total = len(segments[seg_idx]["content"])
+            if split_total < seg_total * 0.5:
+                logger.warning(
+                    f"S{seg_idx} 切分可能不完整: {len(items)}条, "
+                    f"切分总长={split_total}/{seg_total}"
+                )
+
+    # 统计
     counts = {}
     for cat in categories:
         items = summary.get(cat, [])
         ok = sum(1 for it in items if it.get("original_content"))
         counts[cat] = f"{ok}/{len(items)}"
 
+    items_with_shared = sum(1 for seg_idx, items in seg_to_items.items() if len(items) > 1)
     logger.info(
         f"分段匹配: AI标注 {segment_hits} + 模糊 {fuzzy_hits} + 子串 {content_hits} = "
         f"{segment_hits + fuzzy_hits + content_hits} 条 "
@@ -337,7 +452,8 @@ def match_segments_to_summary(summary: dict, segments: list) -> dict:
         f"国内快讯 {counts['domestic_briefs']}, 国际快讯 {counts['international_briefs']})"
     )
     logger.info(
-        f"原文覆盖率: {covered_segments}/{len(segments)} 分段, "
+        f"分段切分: {items_with_shared} 个共享分段已切分, "
+        f"覆盖率 {covered_segments}/{len(segments)} 分段, "
         f"{covered_chars}/{total_chars} 字符 ({coverage_pct}%)"
     )
     if uncovered:
