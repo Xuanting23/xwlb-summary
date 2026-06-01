@@ -38,7 +38,7 @@ init_db()
 def index():
     """首页 — 展示最新一期摘要。"""
     latest = get_latest_summary()
-    return render_template("index.html", summary=latest, target_date=date.target_date())
+    return render_template("index.html", summary=latest, today=date.today())
 
 
 @app.route("/history")
