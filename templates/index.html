@@ -13,7 +13,6 @@
         <span class="meta-item">数据来源：{{ summary.source }}</span>
         {% if summary.summary and summary.summary._meta %}
         <span class="meta-item">模型：{{ summary.summary._meta.model }}</span>
-        <span class="meta-item">生成时间：{{ summary.summary._meta.generated_at[:19] | replace('T', ' ') }}</span>
         {% endif %}
     </div>
 </div>

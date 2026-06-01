@@ -14,7 +14,6 @@
     <span>数据来源：{{ record.source }}</span>
     {% if s._meta %}
     <span>模型：{{ s._meta.model }}</span>
-    <span>生成时间：{{ s._meta.generated_at[:19] | replace('T', ' ') }}</span>
     {% endif %}
 </div>
 
