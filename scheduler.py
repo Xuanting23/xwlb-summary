@@ -16,7 +16,13 @@ from config import (
     POLL_START_HOUR,
     POLL_START_MINUTE,
 )
-from database import get_summary_by_date, mark_failed, save_raw_transcript, save_summary
+from database import (
+    cleanup_old_records,
+    get_summary_by_date,
+    mark_failed,
+    save_raw_transcript,
+    save_summary,
+)
 from fetcher import fetch_daily_transcript
 from summarizer import generate_summary, match_segments_to_summary
 
@@ -100,6 +106,13 @@ def _stop_polling_if_active() -> None:
         logger.info("已停止今日轮询任务")
 
 
+def _daily_cleanup() -> None:
+    """每日凌晨清理过期记录。"""
+    logger.info("[清理] 开始检查过期记录...")
+    deleted = cleanup_old_records()
+    logger.info(f"[清理] 完成，删除 {deleted} 条过期记录")
+
+
 def start_scheduler() -> None:
     """启动弹性轮询调度器。"""
     global _scheduler
@@ -123,6 +136,15 @@ def start_scheduler() -> None:
         ),
         id="poll_xwlb",
         name="新闻联播弹性轮询",
+        replace_existing=True,
+    )
+
+    # 添加每日清理任务：凌晨 3:00 执行
+    _scheduler.add_job(
+        _daily_cleanup,
+        trigger=CronTrigger(hour=3, minute=7, timezone="Asia/Shanghai"),
+        id="daily_cleanup",
+        name="过期记录清理",
         replace_existing=True,
     )
 

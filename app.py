@@ -129,10 +129,13 @@ def api_fetch_now():
 
     # Step 3: 生成 AI 摘要（传入分段以启用 segment_id 标注）
     summary = generate_summary(result["raw_text"], today, segments=segments)
-    if summary and segments:
-        summary = match_segments_to_summary(summary, segments)
+    if not summary:
         mark_failed(today)
         return jsonify({"error": "AI 摘要生成失败"}), 500
+
+    # 匹配原始分段
+    if segments:
+        summary = match_segments_to_summary(summary, segments)
 
     # Step 4: 保存摘要
     save_summary(today, summary)

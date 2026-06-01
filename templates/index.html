@@ -61,17 +61,23 @@
         </section>
         {% endif %}
 
-        {# 国内快讯综述 #}
-        {% if s.domestic_briefs_summary %}
+        {# 国内快讯 #}
+        {% if s.domestic_briefs %}
         <section class="section-card">
             <h2>🇨🇳 国内快讯</h2>
-            <p class="briefs-summary-text">{{ s.domestic_briefs_summary }}</p>
-            {% if s.domestic_briefs_original %}
-            <button class="toggle-original block" onclick="toggleOriginal(this)">📄 查看快讯原文</button>
-            <div class="original-content" style="display:none">
-                <div class="original-text">{{ s.domestic_briefs_original }}</div>
-            </div>
-            {% endif %}
+            <ul class="brief-list">
+                {% for item in s.domestic_briefs %}
+                <li>
+                    <strong>{{ item.title }}</strong>：{{ item.summary }}
+                    {% if item.original_content %}
+                    <button class="toggle-original small" onclick="toggleOriginal(this)">📄</button>
+                    <div class="original-content" style="display:none">
+                        <div class="original-text">{{ item.original_content }}</div>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
         </section>
         {% endif %}
 
@@ -103,17 +109,23 @@
         </section>
         {% endif %}
 
-        {# 国际快讯综述 #}
-        {% if s.international_briefs_summary %}
+        {# 国际快讯 #}
+        {% if s.international_briefs %}
         <section class="section-card">
             <h2>🌐 国际快讯</h2>
-            <p class="briefs-summary-text">{{ s.international_briefs_summary }}</p>
-            {% if s.international_briefs_original %}
-            <button class="toggle-original block" onclick="toggleOriginal(this)">📄 查看快讯原文</button>
-            <div class="original-content" style="display:none">
-                <div class="original-text">{{ s.international_briefs_original }}</div>
-            </div>
-            {% endif %}
+            <ul class="brief-list">
+                {% for item in s.international_briefs %}
+                <li>
+                    <strong>{{ item.title }}</strong>：{{ item.summary }}
+                    {% if item.original_content %}
+                    <button class="toggle-original small" onclick="toggleOriginal(this)">📄</button>
+                    <div class="original-content" style="display:none">
+                        <div class="original-text">{{ item.original_content }}</div>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
         </section>
         {% endif %}
 
@@ -173,14 +185,25 @@
 {% block scripts %}
 <script>
 function toggleOriginal(btn) {
-    const container = btn.closest('.news-body') || btn.closest('li');
-    const original = container.querySelector('.original-content');
+    let container = btn.closest('.news-body') || btn.closest('li');
+    let original;
+    if (container) {
+        original = container.querySelector('.original-content');
+    } else {
+        original = btn.nextElementSibling;
+        if (original && !original.classList.contains('original-content')) {
+            original = null;
+        }
+    }
     if (original) {
         const isHidden = original.style.display === 'none';
         original.style.display = isHidden ? 'block' : 'none';
-        btn.textContent = isHidden ? '📄 收起' : '📄 原文';
-        if (btn.classList.contains('small')) {
+        if (btn.classList.contains('block')) {
+            btn.textContent = isHidden ? '📄 收起快讯原文' : '📄 查看快讯原文';
+        } else if (btn.classList.contains('small')) {
             btn.textContent = isHidden ? '▲' : '📄';
+        } else {
+            btn.textContent = isHidden ? '📄 收起' : '📄 原文';
         }
     }
 }
