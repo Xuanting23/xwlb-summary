@@ -9,7 +9,7 @@ import os
 # ============================================================
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-8718db41c5c649c9a61c78afd614ec75")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
-DEEPSEEK_MODEL = "deepseek-chat"  # DeepSeek V4 Flash
+DEEPSEEK_MODEL = "deepseek-v4-pro"  # DeepSeek V4 Pro
 
 # ============================================================
 # 调度配置
