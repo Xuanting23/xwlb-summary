@@ -8,10 +8,12 @@ from datetime import date, datetime
 from flask import Flask, jsonify, render_template, request
 
 from config import DATABASE_PATH, FLASK_DEBUG, FLASK_HOST, FLASK_PORT, LOG_LEVEL, SECRET_KEY
-from database import get_history, get_history_count, get_latest_summary, get_summary_by_date, init_db
+from database import (
+    get_history, get_history_count, get_latest_summary, get_summary_by_date,
+    init_db, mark_failed, save_raw_transcript, save_summary,
+)
 from summarizer import generate_summary, match_segments_to_summary
 from fetcher import fetch_daily_transcript
-from database import save_raw_transcript, save_summary, mark_failed
 
 # ============================================================
 # 初始化
@@ -131,7 +133,7 @@ def api_fetch_now():
     result = fetch_daily_transcript(target_date)
     if not result:
         mark_failed(target_date)
-        return jsonify({"error": "无法获取今日文字稿，请稍后重试"}), 503
+        return jsonify({"error": f"无法获取 {target_date.isoformat()} 的文字稿，请稍后重试"}), 503
 
     # Step 2: 保存原始文字稿（含分段）
     segments = result.get("segments", [])
