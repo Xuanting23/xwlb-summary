@@ -37,8 +37,12 @@ init_db()
 @app.route("/")
 def index():
     """首页 — 展示最新一期摘要。"""
-    latest = get_latest_summary()
-    return render_template("index.html", summary=latest, today=date.today())
+    try:
+        latest = get_latest_summary()
+        return render_template("index.html", summary=latest, today=date.today())
+    except Exception as e:
+        logger.exception("首页渲染失败")
+        return f"<pre>首页错误: {e}</pre>", 500
 
 
 @app.route("/history")
