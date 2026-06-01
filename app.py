@@ -165,11 +165,14 @@ def api_status():
     """API — 获取系统状态。"""
     latest = get_latest_summary()
     from config import DATABASE_URL
+    import os
     return jsonify({
         "status": "running",
         "latest_date": latest["date"] if latest else None,
         "total_summaries": get_history_count(),
         "db_backend": "PostgreSQL" if DATABASE_URL else "SQLite",
+        "has_database_url": bool(DATABASE_URL),
+        "has_pg_vars": bool(os.environ.get("PGHOST") or os.environ.get("PGDATABASE") or os.environ.get("POSTGRES_URL")),
         "server_time": datetime.now().isoformat(),
     })
 
