@@ -38,7 +38,7 @@ init_db()
 def index():
     """首页 — 展示最新一期摘要。"""
     latest = get_latest_summary()
-    return render_template("index.html", summary=latest, today=date.today())
+    return render_template("index.html", summary=latest, target_date=date.target_date())
 
 
 @app.route("/history")
@@ -113,24 +113,34 @@ def api_summary_by_date(date_str: str):
 
 @app.route("/api/fetch-now", methods=["POST"])
 def api_fetch_now():
-    """手动触发当日抓取 + 摘要生成。"""
-    today = date.today()
-    logger.info(f"手动触发: {today.isoformat()} 的抓取与摘要")
+    """手动触发抓取 + 摘要生成。支持 ?date=YYYY-MM-DD 指定日期，默认今天。"""
+    date_str = request.args.get("date", "").strip()
+    if date_str:
+        try:
+            target_date = date.fromisoformat(date_str)
+            if target_date > date.today():
+                return jsonify({"error": "不能抓取未来日期"}), 400
+        except ValueError:
+            return jsonify({"error": "日期格式错误，请使用 YYYY-MM-DD"}), 400
+    else:
+        target_date = date.today()
+
+    logger.info(f"手动触发: {target_date.isoformat()} 的抓取与摘要")
 
     # Step 1: 获取文字稿
-    result = fetch_daily_transcript(today)
+    result = fetch_daily_transcript(target_date)
     if not result:
-        mark_failed(today)
+        mark_failed(target_date)
         return jsonify({"error": "无法获取今日文字稿，请稍后重试"}), 503
 
     # Step 2: 保存原始文字稿（含分段）
     segments = result.get("segments", [])
-    save_raw_transcript(today, result["raw_text"], result["source"], segments)
+    save_raw_transcript(target_date, result["raw_text"], result["source"], segments)
 
     # Step 3: 生成 AI 摘要（传入分段以启用 segment_id 标注）
-    summary = generate_summary(result["raw_text"], today, segments=segments)
+    summary = generate_summary(result["raw_text"], target_date, segments=segments)
     if not summary:
-        mark_failed(today)
+        mark_failed(target_date)
         return jsonify({"error": "AI 摘要生成失败"}), 500
 
     # 匹配原始分段
@@ -138,11 +148,11 @@ def api_fetch_now():
         summary = match_segments_to_summary(summary, segments)
 
     # Step 4: 保存摘要
-    save_summary(today, summary)
+    save_summary(target_date, summary)
 
     return jsonify({
         "status": "ok",
-        "date": today.isoformat(),
+        "date": target_date.isoformat(),
         "source": result["source"],
         "message": "摘要已生成",
     })
