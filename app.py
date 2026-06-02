@@ -38,9 +38,13 @@ init_db()
 
 @app.route("/")
 def index():
-    """首页 — 展示最新一期摘要。"""
+    """首页 — 仅展示今日摘要，无数据则显示空状态。"""
     latest = get_latest_summary()
-    return render_template("index.html", summary=latest, today=date.today())
+    today = date.today()
+    # 最新摘要如果不是今天的，就不显示（避免跨天后展示旧闻）
+    if latest and str(latest.get("date", "")) != str(today):
+        latest = None
+    return render_template("index.html", summary=latest, today=today)
 
 
 @app.route("/history")
