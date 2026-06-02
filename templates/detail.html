@@ -111,19 +111,21 @@
         </section>
         {% endif %}
 
-        {# 完整文字稿 — 排版优化版 #}
+        {# 完整文字稿（可折叠） #}
         {% if record.raw_text %}
         <section class="section-card transcript-section">
-            <h2>📜 完整文字稿</h2>
-            <div class="transcript-body">
-                {% set paragraphs = record.raw_text.split('\n\n') %}
-                {% for p in paragraphs %}
-                    {% set trimmed = p.strip() %}
-                    {% if trimmed %}
-                    <div class="transcript-paragraph">{{ trimmed }}</div>
-                    {% endif %}
-                {% endfor %}
-            </div>
+            <details>
+                <summary class="raw-toggle">📜 完整文字稿（点击展开 / 收起）</summary>
+                <div class="transcript-body">
+                    {% set paragraphs = record.raw_text.split('\n\n') %}
+                    {% for p in paragraphs %}
+                        {% set trimmed = p.strip() %}
+                        {% if trimmed %}
+                        <div class="transcript-paragraph">{{ trimmed }}</div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </details>
         </section>
         {% endif %}
 
@@ -141,14 +143,6 @@
         </div>
         {% endif %}
     </aside>
-</div>
-
-{# ====== 底部信息栏 — 数据来源 & 模型信息 ====== #}
-<div class="info-bar">
-    <span class="info-item">📡 数据来源：{{ record.source }}</span>
-    {% if s._meta and s._meta.model %}
-    <span class="info-item">🧠 模型：{{ s._meta.model }}</span>
-    {% endif %}
 </div>
 
 {% else %}

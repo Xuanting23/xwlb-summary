@@ -22,7 +22,7 @@
     /* 新增：辅助色 */
     --news-bg: #fafbfc;
     --card-tint: rgba(0, 0, 0, 0.02);
-    --footer-text: rgba(255, 255, 255, 0.85);
+    --footer-text: #ffffff;
     --footer-bg: #1a3a5c;
 
     /* Pico.css 主题覆盖 — 匹配深蓝+红色调 */
@@ -60,7 +60,7 @@
     --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
     --news-bg: #252f3f;
     --card-tint: rgba(255, 255, 255, 0.02);
-    --footer-text: rgba(255, 255, 255, 0.85);
+    --footer-text: #e5e7eb;
     --footer-bg: #0d1b2a;
 
     /* Pico 暗色覆盖 */
