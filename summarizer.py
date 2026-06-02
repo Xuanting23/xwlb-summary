@@ -149,9 +149,11 @@ def generate_summary(raw_text: str, target_date: date,
 
     if segments:
         input_text = _format_segments_for_prompt(segments)
-        logger.info(f"[DeepSeek] 使用分段模式，共 {len(segments)} 条")
+        logger.info(f"[DeepSeek] 使用分段模式，共 {len(segments)} 条，{len(input_text)} 字")
     else:
-        input_text = raw_text[:15000]
+        # 无分段时也用全文，不截断；max_tokens 16384 足以容纳完整新闻联播文字稿
+        input_text = raw_text
+        logger.info(f"[DeepSeek] 使用全文模式，共 {len(raw_text)} 字")
 
     for attempt in range(2):
         try:

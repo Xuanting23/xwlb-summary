@@ -176,8 +176,17 @@ def fetch_via_cctv(target_date: date) -> Optional[dict]:
                     ("div", "article-content"),
                     ("div", "main_content"),
                     ("div", "detail_content"),
+                    ("div", "post_content"),
+                    ("div", "entry-content"),
+                    ("div", "post-body"),
+                    ("div", "article-body"),
+                    ("div", "news-content"),
+                    ("div", "news_content"),
+                    ("div", "body"),              # 备选
+                    ("div", "main"),              # 备选
                     ("article", None),
                     ("section", "content"),
+                    ("section", "article"),
                 ]
                 content_div = None
                 for tag_name, cls in content_div_selectors:
@@ -232,17 +241,17 @@ def fetch_via_cctv(target_date: date) -> Optional[dict]:
                     logger.warning(f"[CCTV] 跳过 [{idx}] {nl['title'][:40]}: {reason}")
                     continue
 
-                # 去重：如果内容与已有分段高度重叠，跳过
-                content_head = content[:60]
-                is_dup = any(content_head[:30] in s["content"][:60] for s in segments)
-                if is_dup:
-                    reason = "内容与已抓取分段重复"
+                # 去重：仅按 URL 去重（链接提取阶段已做），不再按内容相似度判断
+                # 不同 URL 返回相似内容属于央视自身问题，不应由我们过滤
+                url_already_seen = any(s.get("_url") == nl["url"] for s in segments)
+                if url_already_seen:
+                    reason = "URL 重复"
                     skipped.append((nl["title"][:40], nl["url"][-50:], reason))
                     logger.warning(f"[CCTV] 跳过 [{idx}] {nl['title'][:40]}: {reason}")
                     continue
 
                 if content:
-                    segments.append({"title": title, "content": content})
+                    segments.append({"title": title, "content": content, "_url": nl["url"]})
 
             except requests.RequestException as e:
                 reason = f"网络错误: {e}"
@@ -311,6 +320,10 @@ def fetch_via_cctv(target_date: date) -> Optional[dict]:
         if not segments:
             logger.warning("[CCTV] 过滤后无有效分段")
             return None
+
+        # 清理内部标记字段
+        for seg in segments:
+            seg.pop("_url", None)
 
         # 拼接完整文字稿
         parts = []
