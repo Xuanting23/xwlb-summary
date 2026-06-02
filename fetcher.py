@@ -57,6 +57,14 @@ def fetch_via_akshare(target_date: date) -> Optional[dict]:
             logger.warning(f"[AkShare] {date_str} 文字稿内容为空")
             return None
 
+        # 最低分段数阈值：不足3条视为数据尚未就绪，返回 None 触发重试
+        if len(segments) < 3:
+            logger.warning(
+                f"[AkShare] {date_str} 有效分段不足 ({len(segments)} 条 < 3)，"
+                f"数据可能尚未就绪，触发重试"
+            )
+            return None
+
         logger.info(
             f"[AkShare] 成功获取 {date_str} 的文字稿，"
             f"共 {len(raw_text)} 字，{len(segments)} 条新闻"
@@ -321,6 +329,13 @@ def fetch_via_cctv(target_date: date) -> Optional[dict]:
             logger.warning("[CCTV] 过滤后无有效分段")
             return None
 
+        # 最低分段数阈值：不足3条视为抓取失败，触发后续回退
+        if len(segments) < 3:
+            logger.warning(
+                f"[CCTV] 有效分段不足 ({len(segments)} 条 < 3)，视为抓取失败，触发回退"
+            )
+            return None
+
         # 清理内部标记字段
         for seg in segments:
             seg.pop("_url", None)
@@ -428,7 +443,7 @@ def fetch_via_govopendata(target_date: date) -> Optional[dict]:
 def fetch_daily_transcript(target_date: date) -> Optional[dict]:
     """
     获取指定日期的新闻联播文字稿。
-    首选 AkShare，失败则降级到 cn.govopendata.com。
+    优先 AkShare，其次 CCTV 官网（≥3 条分段才算成功），最后尝试 govopendata。
 
     Args:
         target_date: 目标日期
@@ -438,19 +453,19 @@ def fetch_daily_transcript(target_date: date) -> Optional[dict]:
     """
     logger.info(f"===== 开始获取 {target_date.isoformat()} 的新闻联播文字稿 =====")
 
-    # 方案 1: CCTV 官网（最权威，优先）
-    result = fetch_via_cctv(target_date)
-    if result:
-        return result
-
-    # 方案 2: AkShare
-    logger.info("CCTV 未获取到数据，尝试 AkShare...")
+    # 方案 1: AkShare（最可靠，优先）
     result = fetch_via_akshare(target_date)
     if result:
         return result
 
-    # 方案 3: cn.govopendata.com
-    logger.info("AkShare 未获取到数据，尝试备选方案 govopendata...")
+    # 方案 2: CCTV 官网（备选，有分段数阈值兜底）
+    logger.info("AkShare 未获取到数据，尝试 CCTV 官网...")
+    result = fetch_via_cctv(target_date)
+    if result:
+        return result
+
+    # 方案 3: cn.govopendata.com（最后备选）
+    logger.info("CCTV 未获取到数据，尝试备选方案 govopendata...")
     result = fetch_via_govopendata(target_date)
     if result:
         return result
