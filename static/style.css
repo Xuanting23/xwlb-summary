@@ -145,14 +145,13 @@ nav { display: flex; gap: 8px; align-items: center; }
     color: white;
 }
 
-/* --- 暗色模式切换按钮 --- */
+/* --- 暗色模式切换按钮 — 与其他 nav-link 一致，无特殊背景 --- */
 .theme-toggle {
-    background: rgba(255,255,255,0.12);
-    color: white;
+    color: rgba(255,255,255,0.85);
     border: none;
-    padding: 6px 12px;
+    padding: 6px 16px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     cursor: pointer;
     transition: var(--transition);
     font-family: inherit;
@@ -160,9 +159,11 @@ nav { display: flex; gap: 8px; align-items: center; }
     align-items: center;
     gap: 4px;
     white-space: nowrap;
+    background: transparent;
 }
 .theme-toggle:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.15);
+    color: white;
 }
 
 /* --- 主体 --- */
@@ -559,14 +560,13 @@ nav { display: flex; gap: 8px; align-items: center; }
     color: var(--primary);
 }
 
-/* --- 导航栏直播链接 --- */
+/* --- 导航栏直播链接 — 与其他 nav-link 保持一致，无特殊背景 --- */
 .live-link {
-    background: rgba(255,255,255,0.12);
-    color: white;
+    color: rgba(255,255,255,0.85);
     font-weight: 600;
 }
 .live-link:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.15);
     color: white;
 }
 
@@ -900,6 +900,28 @@ details { cursor: pointer; }
 }
 .raw-toggle:hover { color: var(--primary); }
 
+/* --- 文字稿底部收起按钮 --- */
+.btn-collapse {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: center;
+    transition: var(--transition), background 0.3s ease, color 0.3s ease;
+    font-family: inherit;
+}
+.btn-collapse:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
 
 /* ============================================================
    移动端优化 (≤768px)
@@ -1089,6 +1111,11 @@ details { cursor: pointer; }
 
     .transcript-body .transcript-paragraph {
         margin-bottom: 12px;
+    }
+
+    .btn-collapse {
+        padding: 8px 14px;
+        font-size: 0.85rem;
     }
 
     /* --- 页脚 --- */
