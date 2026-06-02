@@ -3,7 +3,7 @@
 """
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 
 from flask import Flask, jsonify, render_template, request
 
@@ -43,10 +43,20 @@ def index():
     """首页 — 仅展示今日摘要，无数据则显示空状态。"""
     latest = get_latest_summary()
     today = date.today()
+
+    # 北京时间（UTC+8）
+    beijing_now = datetime.now(timezone.utc) + timedelta(hours=8)
+    after_19 = beijing_now.hour >= 19
+
     # 最新摘要如果不是今天的，就不显示（避免跨天后展示旧闻）
     if latest and str(latest.get("date", "")) != str(today):
         latest = None
-    return render_template("index.html", summary=latest, today=today)
+    return render_template(
+        "index.html",
+        summary=latest,
+        today=today,
+        after_19=after_19,
+    )
 
 
 @app.route("/history")

@@ -170,15 +170,26 @@
 
 {% else %}
 {# ====== 空状态 ====== #}
+{% set date_compact = today | string | replace('-', '') %}
 <div class="empty-state">
     <div class="empty-icon">📭</div>
+    {% if after_19 %}
+    <h1>摘要生成中</h1>
+    <p>新闻联播文字稿正在由系统自动抓取并生成 AI 摘要。</p>
+    <p class="text-muted">CCTV 文字稿通常在 <strong>20:30</strong> 左右逐步发布完成，请稍后刷新页面。</p>
+    <div class="empty-actions">
+        <a href="https://tv.cctv.com/lm/xwlb/day/{{ date_compact }}.shtml" target="_blank" rel="noopener" class="btn btn-live btn-lg">📺 回看今日直播</a>
+        <a href="https://tophub.today" target="_blank" rel="noopener" class="btn btn-hot btn-lg">🔥 浏览全网热榜</a>
+    </div>
+    {% else %}
     <h1>暂无摘要数据</h1>
     <p>新闻联播每日总结将于每晚 19:30 后自动生成。</p>
-    <p class="text-muted">在摘要生成之前，您可以先观看直播。</p>
+    <p class="text-muted">CCTV 文字稿通常在 <strong>20:30</strong> 左右发布完成，届时摘要将自动更新。</p>
     <div class="empty-actions">
         <a href="https://tv.cctv.com/live/cctv13/" target="_blank" rel="noopener" class="btn btn-live btn-lg">📺 观看 CCTV-13 新闻直播</a>
         <a href="https://tophub.today" target="_blank" rel="noopener" class="btn btn-hot btn-lg">🔥 浏览全网热榜</a>
     </div>
+    {% endif %}
 </div>
 {% endif %}
 
