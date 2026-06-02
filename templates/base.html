@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}新闻联播·每日总结{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     {# 暗色模式防闪烁脚本 — 在页面渲染前应用主题 #}
@@ -21,8 +22,7 @@
     <header class="site-header">
         <div class="container">
             <a href="/" class="logo">
-                <span class="logo-icon">📰</span>
-                <span class="logo-text">新闻联播·每日总结</span>
+                <img src="{{ url_for('static', filename='logo.svg') }}" alt="新闻联播·每日总结" class="logo-svg" width="260" height="40">
             </a>
             <nav>
                 <a href="https://tv.cctv.com/live/cctv13/" target="_blank" rel="noopener" class="nav-link live-link" title="CCTV-13 新闻频道实时直播">📺 直播</a>

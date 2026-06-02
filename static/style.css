@@ -121,14 +121,14 @@ body {
 .logo {
     display: flex;
     align-items: center;
-    gap: 10px;
     text-decoration: none;
     color: white;
-    font-weight: 700;
-    font-size: 1.2rem;
 }
 
-.logo-icon { font-size: 1.5rem; }
+.logo-svg {
+    height: 32px;
+    width: auto;
+}
 
 nav { display: flex; gap: 8px; align-items: center; }
 
@@ -942,17 +942,7 @@ details { cursor: pointer; }
         padding: 0 12px;
     }
 
-    .logo {
-        font-size: 0.95rem;
-        gap: 5px;
-    }
-
-    .logo-icon { font-size: 1.2rem; }
-
-    /* 手机端隐藏 logo 文字，只保留图标 */
-    .logo-text {
-        display: none;
-    }
+    .logo-svg { height: 24px; }
 
     nav { gap: 2px; }
 
