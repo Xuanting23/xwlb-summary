@@ -185,6 +185,11 @@ nav { display: flex; gap: 8px; align-items: center; }
 
 .site-footer p {
     margin-bottom: 4px;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .site-footer p {
+    color: #e5e7eb;
 }
 
 /* --- 底部信息栏 --- */
