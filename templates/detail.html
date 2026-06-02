@@ -133,6 +133,12 @@
     </div>
 
     <aside class="col-side">
+        <div class="side-card live-card">
+            <h2>📺 回看直播</h2>
+            <p class="live-hint">{{ date_str }} 新闻联播完整回放</p>
+            <a href="https://tv.cctv.com/lm/xwlb/day/{{ date_str | replace('-', '') }}.shtml" target="_blank" rel="noopener" class="btn btn-live">📺 观看回放</a>
+        </div>
+
         {% if s.keywords %}
         <div class="side-card">
             <h2>🔑 关键词</h2>
