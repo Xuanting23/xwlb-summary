@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ date_str }} 详情 — 新闻联播每日总结{% endblock %}
+{% block title %}{{ date_str }} 详情 — 新闻联播·每日总结{% endblock %}
 
 {% block content %}
 
@@ -8,14 +8,7 @@
 {% if record %}
 {% set s = record.summary %}
 
-<h1 class="page-title">{{ date_str }} 新闻联播摘要</h1>
-
-<div class="detail-meta">
-    <span>数据来源：{{ record.source }}</span>
-    {% if s._meta %}
-    <span>模型：{{ s._meta.model }}</span>
-    {% endif %}
-</div>
+<h1 class="page-title">{{ date_str }} 新闻联播</h1>
 
 <div class="columns">
     <div class="col-main">
@@ -118,13 +111,19 @@
         </section>
         {% endif %}
 
-        {# 完整原始文字稿（可折叠） #}
+        {# 完整文字稿 — 排版优化版 #}
         {% if record.raw_text %}
-        <section class="section-card">
-            <details>
-                <summary class="raw-toggle">📜 查看完整文字稿</summary>
-                <pre class="raw-text">{{ record.raw_text }}</pre>
-            </details>
+        <section class="section-card transcript-section">
+            <h2>📜 完整文字稿</h2>
+            <div class="transcript-body">
+                {% set paragraphs = record.raw_text.split('\n\n') %}
+                {% for p in paragraphs %}
+                    {% set trimmed = p.strip() %}
+                    {% if trimmed %}
+                    <div class="transcript-paragraph">{{ trimmed }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
         </section>
         {% endif %}
 
@@ -144,6 +143,14 @@
     </aside>
 </div>
 
+{# ====== 底部信息栏 — 数据来源 & 模型信息 ====== #}
+<div class="info-bar">
+    <span class="info-item">📡 数据来源：{{ record.source }}</span>
+    {% if s._meta and s._meta.model %}
+    <span class="info-item">🧠 模型：{{ s._meta.model }}</span>
+    {% endif %}
+</div>
+
 {% else %}
 <div class="empty-state">
     <div class="empty-icon">📭</div>
@@ -158,13 +165,11 @@
 {% block scripts %}
 <script>
 function toggleOriginal(btn) {
-    // 优先在 .news-body 或 li 内查找
     let container = btn.closest('.news-body') || btn.closest('li');
     let original;
     if (container) {
         original = container.querySelector('.original-content');
     } else {
-        // 快讯按钮：original-content 是同级的下一个元素
         original = btn.nextElementSibling;
         if (original && !original.classList.contains('original-content')) {
             original = null;

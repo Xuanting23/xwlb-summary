@@ -1,6 +1,7 @@
 /* ============================================================
-   新闻联播每日总结 — 样式表
+   新闻联播·每日总结 — 样式表
    配色：深蓝主调 + 灰白底，沉稳大气
+   支持亮色 / 暗色双模式
    ============================================================ */
 
 /* --- 基础重置与变量 --- */
@@ -18,6 +19,11 @@
     --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.1);
     --radius: 10px;
     --transition: 0.2s ease;
+    /* 新增：辅助色 */
+    --news-bg: #fafbfc;
+    --card-tint: rgba(0, 0, 0, 0.02);
+    --footer-text: rgba(255, 255, 255, 0.85);
+    --footer-bg: #1a3a5c;
 
     /* Pico.css 主题覆盖 — 匹配深蓝+红色调 */
     --pico-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
@@ -37,6 +43,35 @@
     --pico-block-spacing-vertical: 1rem;
 }
 
+/* ============================================================
+   暗色模式
+   ============================================================ */
+[data-theme="dark"] {
+    --primary: #3b6fa0;
+    --primary-light: #5a90c0;
+    --accent: #e8453c;
+    --accent-light: #f06050;
+    --bg: #111827;
+    --card-bg: #1f2937;
+    --text: #e5e7eb;
+    --text-muted: #9ca3af;
+    --border: #374151;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --news-bg: #252f3f;
+    --card-tint: rgba(255, 255, 255, 0.02);
+    --footer-text: rgba(255, 255, 255, 0.85);
+    --footer-bg: #0d1b2a;
+
+    /* Pico 暗色覆盖 */
+    --pico-color: #e5e7eb;
+    --pico-muted-color: #9ca3af;
+    --pico-background-color: #111827;
+    --pico-card-background-color: #1f2937;
+    --pico-card-border-color: #374151;
+    --pico-card-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -52,6 +87,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -69,6 +105,11 @@ body {
     top: 0;
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: background 0.3s ease;
+}
+
+[data-theme="dark"] .site-header {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
 .site-header .container {
@@ -89,9 +130,10 @@ body {
 
 .logo-icon { font-size: 1.5rem; }
 
-nav { display: flex; gap: 8px; }
+nav { display: flex; gap: 8px; align-items: center; }
+
 .nav-link {
-    color: rgba(255,255,255,0.8);
+    color: rgba(255,255,255,0.85);
     text-decoration: none;
     padding: 6px 16px;
     border-radius: 20px;
@@ -103,18 +145,68 @@ nav { display: flex; gap: 8px; }
     color: white;
 }
 
+/* --- 暗色模式切换按钮 --- */
+.theme-toggle {
+    background: rgba(255,255,255,0.12);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.theme-toggle:hover {
+    background: rgba(255,255,255,0.2);
+}
+
 /* --- 主体 --- */
 .site-main {
     flex: 1;
     padding: 30px 0 40px;
+    transition: background 0.3s ease;
 }
 
+/* --- 页脚 --- */
 .site-footer {
-    background: var(--primary);
-    color: rgba(255,255,255,0.6);
+    background: var(--footer-bg);
+    color: var(--footer-text);
     text-align: center;
-    padding: 16px 0;
+    padding: 20px 0;
     font-size: 0.85rem;
+    transition: background 0.3s ease;
+}
+
+.site-footer p {
+    margin-bottom: 4px;
+}
+
+/* --- 底部信息栏 --- */
+.info-bar {
+    text-align: center;
+    margin: 32px 0 0;
+    padding: 16px 20px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.info-bar .info-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 /* --- 摘要头部 --- */
@@ -127,6 +219,7 @@ nav { display: flex; gap: 8px; }
     font-size: 2rem;
     color: var(--primary);
     font-weight: 700;
+    transition: color 0.3s ease;
 }
 
 .date-weekday {
@@ -156,6 +249,10 @@ nav { display: flex; gap: 8px; }
     padding: 24px 28px;
     border-radius: var(--radius);
     margin-bottom: 24px;
+}
+
+[data-theme="dark"] .overview-card {
+    background: linear-gradient(135deg, #1f2d3d 0%, #2c4a6e 100%);
 }
 
 .overview-card h2 {
@@ -190,6 +287,7 @@ nav { display: flex; gap: 8px; }
     padding: 24px;
     margin-bottom: 20px;
     box-shadow: var(--shadow);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .section-card h2 {
@@ -198,6 +296,7 @@ nav { display: flex; gap: 8px; }
     margin-bottom: 16px;
     padding-bottom: 10px;
     border-bottom: 2px solid var(--border);
+    transition: color 0.3s ease, border-color 0.3s ease;
 }
 
 /* --- 要闻列表 --- */
@@ -208,10 +307,15 @@ nav { display: flex; gap: 8px; }
     gap: 16px;
     padding: 16px;
     border-radius: 8px;
-    background: #fafbfc;
-    transition: var(--transition);
+    background: var(--news-bg);
+    transition: var(--transition), background 0.3s ease;
 }
-.news-item:hover { background: #f0f4f8; }
+.news-item:hover {
+    background: var(--card-tint);
+}
+[data-theme="dark"] .news-item:hover {
+    background: rgba(255,255,255,0.04);
+}
 
 .news-rank {
     width: 36px;
@@ -233,12 +337,14 @@ nav { display: flex; gap: 8px; }
     font-size: 1.05rem;
     color: var(--primary);
     margin-bottom: 6px;
+    transition: color 0.3s ease;
 }
 
 .news-summary {
     font-size: 0.95rem;
-    color: #555;
+    color: var(--text);
     line-height: 1.6;
+    opacity: 0.85;
 }
 
 .news-meta {
@@ -268,6 +374,19 @@ nav { display: flex; gap: 8px; }
 .cat-教育 { background: #e0f7fa; color: #006064; }
 .cat-生态 { background: #e8f5e9; color: #1b5e20; }
 
+[data-theme="dark"] .category-tag {
+    opacity: 0.9;
+}
+[data-theme="dark"] .cat-政治 { background: #3d1518; color: #f08080; }
+[data-theme="dark"] .cat-经济 { background: #152a17; color: #80c080; }
+[data-theme="dark"] .cat-科技 { background: #0d2137; color: #80b8e0; }
+[data-theme="dark"] .cat-民生 { background: #2d1a0a; color: #e0a060; }
+[data-theme="dark"] .cat-外交 { background: #1a1530; color: #a090d0; }
+[data-theme="dark"] .cat-军事 { background: #1f1816; color: #b09080; }
+[data-theme="dark"] .cat-文化 { background: #2d1520; color: #e080a0; }
+[data-theme="dark"] .cat-教育 { background: #0d282c; color: #80c8cc; }
+[data-theme="dark"] .cat-生态 { background: #152a17; color: #80c080; }
+
 .region-tag {
     display: inline-block;
     padding: 2px 10px;
@@ -275,6 +394,10 @@ nav { display: flex; gap: 8px; }
     font-size: 0.78rem;
     background: #f3e5f5;
     color: #6a1b9a;
+}
+[data-theme="dark"] .region-tag {
+    background: #2a1530;
+    color: #c090d0;
 }
 
 .stars { font-size: 0.85rem; }
@@ -289,19 +412,24 @@ nav { display: flex; gap: 8px; }
 
 .brief-list li {
     padding: 10px 14px;
-    background: #fafbfc;
+    background: var(--news-bg);
     border-radius: 6px;
     font-size: 0.93rem;
     line-height: 1.6;
     border-left: 3px solid var(--primary-light);
+    transition: background 0.3s ease;
 }
 
-.brief-list li strong { color: var(--primary); }
+.brief-list li strong {
+    color: var(--primary);
+    transition: color 0.3s ease;
+}
 
 /* --- 国际新闻列表 --- */
 .intl-news-list { display: flex; flex-direction: column; gap: 14px; }
 
 .intl-item { border-left: 3px solid #6a1b9a; }
+[data-theme="dark"] .intl-item { border-left-color: #9a4aba; }
 
 /* --- 侧边栏 --- */
 .side-card {
@@ -310,12 +438,14 @@ nav { display: flex; gap: 8px; }
     padding: 20px;
     margin-bottom: 20px;
     box-shadow: var(--shadow);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .side-card h2 {
     font-size: 1rem;
     color: var(--primary);
     margin-bottom: 14px;
+    transition: color 0.3s ease;
 }
 
 /* --- 关键词云 --- */
@@ -333,7 +463,7 @@ nav { display: flex; gap: 8px; }
     background: var(--primary);
     color: white;
     font-weight: 500;
-    transition: var(--transition);
+    transition: var(--transition), background 0.3s ease;
 }
 .keyword-tag:hover { background: var(--accent); }
 .keyword-tag.small {
@@ -371,13 +501,21 @@ nav { display: flex; gap: 8px; }
 }
 
 .btn-outline {
-    background: white;
+    background: transparent;
     color: var(--primary);
     border: 2px solid var(--border);
+    transition: var(--transition), border-color 0.3s ease, color 0.3s ease;
 }
 .btn-outline:hover {
     border-color: var(--primary);
-    background: #f8f9fa;
+    background: rgba(26, 58, 92, 0.05);
+}
+[data-theme="dark"] .btn-outline {
+    border-color: var(--border);
+}
+[data-theme="dark"] .btn-outline:hover {
+    border-color: var(--primary-light);
+    background: rgba(59, 111, 160, 0.15);
 }
 
 .btn-lg {
@@ -396,16 +534,29 @@ nav { display: flex; gap: 8px; }
     color: white;
 }
 
-/* --- 直播卡片 --- */
+/* --- 回看 / 直播卡片 --- */
 .live-card {
     background: linear-gradient(135deg, #f0f4f8 0%, #fff 100%);
     border: 1px solid #d0dbe8;
 }
+[data-theme="dark"] .live-card {
+    background: linear-gradient(135deg, #1e2a38 0%, #1f2937 100%);
+    border: 1px solid #374151;
+}
+
 .live-hint {
     font-size: 0.8rem;
     color: #999;
     margin-bottom: 12px;
     line-height: 1.5;
+}
+[data-theme="dark"] .live-hint {
+    color: #9ca3af;
+}
+
+.replay-date {
+    font-weight: 700;
+    color: var(--primary);
 }
 
 /* --- 导航栏直播链接 --- */
@@ -435,6 +586,8 @@ nav { display: flex; gap: 8px; }
 }
 .fetch-status.success { color: #2e7d32; }
 .fetch-status.error { color: #c41e3a; }
+[data-theme="dark"] .fetch-status.success { color: #80c080; }
+[data-theme="dark"] .fetch-status.error { color: #f08080; }
 
 /* --- 空状态 --- */
 .empty-state {
@@ -450,11 +603,13 @@ nav { display: flex; gap: 8px; }
 .empty-state h1 {
     color: var(--primary);
     margin-bottom: 10px;
+    transition: color 0.3s ease;
 }
 
 .empty-state h2 {
     color: var(--primary);
     margin-bottom: 8px;
+    transition: color 0.3s ease;
 }
 
 .empty-state p {
@@ -471,6 +626,7 @@ nav { display: flex; gap: 8px; }
     font-size: 1.8rem;
     color: var(--primary);
     margin-bottom: 6px;
+    transition: color 0.3s ease;
 }
 
 .page-subtitle {
@@ -494,7 +650,7 @@ nav { display: flex; gap: 8px; }
     box-shadow: var(--shadow);
     text-decoration: none;
     color: var(--text);
-    transition: var(--transition);
+    transition: var(--transition), background 0.3s ease;
 }
 .history-card:hover {
     box-shadow: var(--shadow-hover);
@@ -512,6 +668,7 @@ nav { display: flex; gap: 8px; }
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--primary);
+    transition: color 0.3s ease;
 }
 
 .date-small {
@@ -524,7 +681,8 @@ nav { display: flex; gap: 8px; }
 .history-overview {
     font-size: 0.93rem;
     line-height: 1.6;
-    color: #555;
+    color: var(--text);
+    opacity: 0.75;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -559,7 +717,7 @@ nav { display: flex; gap: 8px; }
     text-decoration: none;
     color: var(--primary);
     box-shadow: var(--shadow);
-    transition: var(--transition);
+    transition: var(--transition), background 0.3s ease, color 0.3s ease;
 }
 .page-link:hover { background: var(--primary); color: white; }
 
@@ -575,6 +733,7 @@ nav { display: flex; gap: 8px; }
     text-decoration: none;
     margin-bottom: 16px;
     font-size: 0.9rem;
+    transition: color 0.3s ease;
 }
 .back-link:hover { text-decoration: underline; }
 
@@ -594,10 +753,10 @@ nav { display: flex; gap: 8px; }
     border: 1px solid #d0d5dd;
     border-radius: 12px;
     font-size: 0.78rem;
-    background: #f9fafb;
-    color: #666;
+    background: var(--card-bg);
+    color: var(--text-muted);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transition), background 0.3s ease, border-color 0.3s ease;
     font-family: inherit;
 }
 .toggle-original:hover {
@@ -605,6 +764,15 @@ nav { display: flex; gap: 8px; }
     border-color: #2c5f8a;
     color: #2c5f8a;
 }
+[data-theme="dark"] .toggle-original {
+    border-color: #4a5565;
+}
+[data-theme="dark"] .toggle-original:hover {
+    background: #1a3548;
+    border-color: #5a90c0;
+    color: #80b8e0;
+}
+
 .toggle-original.small {
     padding: 1px 6px;
     font-size: 0.72rem;
@@ -622,7 +790,8 @@ nav { display: flex; gap: 8px; }
 .briefs-summary-text {
     font-size: 0.95rem;
     line-height: 1.8;
-    color: #555;
+    color: var(--text);
+    opacity: 0.85;
 }
 
 .original-content {
@@ -640,13 +809,87 @@ nav { display: flex; gap: 8px; }
     color: #555;
     white-space: pre-wrap;
 }
+[data-theme="dark"] .original-text {
+    background: #2a2520;
+    border-left-color: #c4a020;
+    color: #d0c8b0;
+}
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* --- 原始文字稿折叠区 --- */
+/* ============================================================
+   完整文字稿板块 — 排版优化
+   ============================================================ */
+
+/* 全文区域主容器 */
+.transcript-section {
+    margin-top: 24px;
+}
+
+.transcript-section h2 {
+    font-size: 1.15rem;
+    color: var(--primary);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border);
+    transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 文字稿正文 — 段落清晰、适合阅读 */
+.transcript-body {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 4px 0;
+}
+
+/* 把文字稿中的每个自然段（以空行分隔）渲染为独立块 */
+.transcript-body .transcript-paragraph {
+    margin-bottom: 16px;
+    padding: 0 4px;
+    text-indent: 2em;
+}
+
+/* 段落之间加细分隔线，增强视觉层次 */
+.transcript-body .transcript-paragraph + .transcript-paragraph {
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+}
+
+/* 详情页折叠式文字稿 — 保留原有结构但改善排版 */
+details summary.raw-toggle {
+    font-size: 1rem;
+    color: var(--text-muted);
+    padding: 8px 0;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+details summary.raw-toggle:hover { color: var(--primary); }
+
+.raw-text {
+    margin-top: 12px;
+    padding: 20px 24px;
+    background: var(--news-bg);
+    border-radius: 8px;
+    font-size: 0.92rem;
+    line-height: 2;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 600px;
+    overflow-y: auto;
+    color: var(--text);
+    transition: background 0.3s ease, color 0.3s ease;
+    border: 1px solid var(--border);
+}
+
+/* --- 原始文字稿折叠区（保留兼容旧版） --- */
 details { cursor: pointer; }
 
 .raw-toggle {
@@ -656,20 +899,6 @@ details { cursor: pointer; }
     user-select: none;
 }
 .raw-toggle:hover { color: var(--primary); }
-
-.raw-text {
-    margin-top: 12px;
-    padding: 16px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    font-size: 0.88rem;
-    line-height: 1.8;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 600px;
-    overflow-y: auto;
-    color: #444;
-}
 
 
 /* ============================================================
@@ -704,6 +933,11 @@ details { cursor: pointer; }
         padding: 5px 10px;
         font-size: 0.82rem;
         border-radius: 16px;
+    }
+
+    .theme-toggle {
+        padding: 5px 8px;
+        font-size: 0.78rem;
     }
 
     /* --- 主体间距缩减 --- */
@@ -743,7 +977,17 @@ details { cursor: pointer; }
         padding-bottom: 8px;
     }
 
-    /* === 要闻板块手机端优化：字体舒展 + 间距调整 === */
+    /* --- 信息栏 --- */
+    .info-bar {
+        margin: 20px 0 0;
+        padding: 12px 14px;
+        gap: 12px;
+        font-size: 0.78rem;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    /* === 要闻板块手机端优化 === */
     .top-news-list {
         gap: 12px;
     }
@@ -831,10 +1075,26 @@ details { cursor: pointer; }
         padding: 10px 12px;
     }
 
+    /* --- 文字稿 --- */
+    .raw-text {
+        padding: 14px 16px;
+        font-size: 0.85rem;
+        line-height: 1.8;
+    }
+
+    .transcript-body {
+        font-size: 0.88rem;
+        line-height: 1.9;
+    }
+
+    .transcript-body .transcript-paragraph {
+        margin-bottom: 12px;
+    }
+
     /* --- 页脚 --- */
     .site-footer {
         font-size: 0.75rem;
-        padding: 12px 0;
+        padding: 14px 0;
     }
 
     /* --- Pico.css 移动端微调 --- */
@@ -853,5 +1113,4 @@ details { cursor: pointer; }
     .btn-lg {
         width: auto;
     }
-
 }

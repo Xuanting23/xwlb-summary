@@ -1,23 +1,19 @@
 {% extends "base.html" %}
-{% block title %}今日摘要 — 新闻联播每日总结{% endblock %}
+{% block title %}今日摘要 — 新闻联播·每日总结{% endblock %}
 
 {% block content %}
 
 {% if summary %}
+{# ====== 摘要头部 ====== #}
 <div class="summary-header">
     <h1 class="date-title">
         📅 {{ summary.date }}
-        <span class="date-weekday">新闻联播摘要</span>
+        <span class="date-weekday">新闻联播</span>
     </h1>
-    <div class="meta-info">
-        <span class="meta-item">数据来源：{{ summary.source }}</span>
-        {% if summary.summary and summary.summary._meta %}
-        <span class="meta-item">模型：{{ summary.summary._meta.model }}</span>
-        {% endif %}
-    </div>
 </div>
 
 {% set s = summary.summary %}
+{% set date_compact = summary.date | string | replace('-', '') %}
 
 <div class="columns">
     <div class="col-main">
@@ -120,6 +116,22 @@
         </section>
         {% endif %}
 
+        {# ====== 完整文字稿板块 ====== #}
+        {% if summary.raw_text %}
+        <section class="section-card transcript-section">
+            <h2>📜 完整文字稿</h2>
+            <div class="transcript-body">
+                {% set paragraphs = summary.raw_text.split('\n\n') %}
+                {% for p in paragraphs %}
+                    {% set trimmed = p.strip() %}
+                    {% if trimmed %}
+                    <div class="transcript-paragraph">{{ trimmed }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
     </div>
 
     <aside class="col-side">
@@ -136,15 +148,14 @@
         </div>
         {% endif %}
 
-        {# 直播入口 #}
+        {# 回看直播 — 融合为单一跳转按钮 #}
         <div class="side-card live-card">
-            <h2>📺 正在直播</h2>
-            <p class="live-hint">每晚 19:00-19:30，CCTV-1 / CCTV-13 并机直播</p>
-            <a href="https://tv.cctv.com/live/cctv13/" target="_blank" class="btn btn-live">📺 新闻频道 CCTV-13</a>
-            <a href="https://tv.cctv.com/live/cctv1/" target="_blank" class="btn btn-outline" style="margin-top:6px">📺 综合频道 CCTV-1</a>
+            <h2>📺 回看直播</h2>
+            <p class="live-hint">{{ summary.date }} 新闻联播完整回放</p>
+            <a href="https://tv.cctv.com/lm/xwlb/day/{{ date_compact }}.shtml" target="_blank" rel="noopener" class="btn btn-live">📺 观看回放</a>
         </div>
 
-        {# 快速导航 #}
+        {# 快速操作 #}
         <div class="side-card">
             <h2>🔗 快速操作</h2>
             <div class="quick-actions">
@@ -157,14 +168,23 @@
     </aside>
 </div>
 
+{# ====== 底部信息栏 — 数据来源 & 模型信息 ====== #}
+<div class="info-bar">
+    <span class="info-item">📡 数据来源：{{ summary.source }}</span>
+    {% if s._meta and s._meta.model %}
+    <span class="info-item">🧠 模型：{{ s._meta.model }}</span>
+    {% endif %}
+</div>
+
 {% else %}
+{# ====== 空状态 ====== #}
 <div class="empty-state">
     <div class="empty-icon">📭</div>
     <h1>暂无摘要数据</h1>
     <p>新闻联播每日总结将于每晚 19:30 后自动生成。</p>
     <p class="text-muted">在摘要生成之前，您可以先观看直播。</p>
     <div class="empty-actions">
-        <a href="https://tv.cctv.com/live/cctv13/" target="_blank" class="btn btn-live btn-lg">📺 观看 CCTV-13 新闻直播</a>
+        <a href="https://tv.cctv.com/live/cctv13/" target="_blank" rel="noopener" class="btn btn-live btn-lg">📺 观看 CCTV-13 新闻直播</a>
         <button onclick="manualFetch()" class="btn btn-primary btn-lg">🔄 立即获取今日摘要</button>
     </div>
     <p id="fetch-status" class="fetch-status"></p>

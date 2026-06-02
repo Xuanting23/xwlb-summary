@@ -3,9 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}新闻联播每日总结{% endblock %}</title>
+    <title>{% block title %}新闻联播·每日总结{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {# 暗色模式防闪烁脚本 — 在页面渲染前应用主题 #}
+    <script>
+    (function() {
+        var theme = localStorage.getItem('theme');
+        if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    })();
+    </script>
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -16,9 +25,10 @@
                 <span class="logo-text">新闻联播·每日总结</span>
             </a>
             <nav>
-                <a href="https://tv.cctv.com/live/cctv13/" target="_blank" class="nav-link live-link" title="CCTV-13 新闻频道直播">📺 直播</a>
+                <a href="https://tv.cctv.com/live/cctv13/" target="_blank" rel="noopener" class="nav-link live-link" title="CCTV-13 新闻频道实时直播">📺 直播</a>
                 <a href="/" class="nav-link">今日摘要</a>
                 <a href="/history" class="nav-link">历史回顾</a>
+                <button class="theme-toggle" id="themeToggle" title="切换暗色/亮色模式" aria-label="切换主题">🌙</button>
             </nav>
         </div>
     </header>
@@ -32,8 +42,34 @@
     <footer class="site-footer">
         <div class="container">
             <p>仅供个人学习研究使用 · 文字稿版权归 CCTV 所有 · AI 摘要由 DeepSeek 生成</p>
+            {% block footer_extra %}{% endblock %}
         </div>
     </footer>
+
+    <script>
+    (function() {
+        var btn = document.getElementById('themeToggle');
+        var html = document.documentElement;
+
+        function updateIcon() {
+            var isDark = html.getAttribute('data-theme') === 'dark';
+            btn.textContent = isDark ? '☀️' : '🌙';
+        }
+        updateIcon();
+
+        btn.addEventListener('click', function() {
+            var isDark = html.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            updateIcon();
+        });
+    })();
+    </script>
 
     {% block scripts %}{% endblock %}
 </body>
