@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 # 应用启动时初始化数据库
 init_db()

@@ -565,6 +565,25 @@ nav { display: flex; gap: 8px; align-items: center; }
     color: var(--primary);
 }
 
+/* --- 全网热榜卡片 --- */
+.hot-card {
+    background: linear-gradient(135deg, #fff7ed 0%, #fff 100%);
+    border: 1px solid #fcd9b8;
+}
+[data-theme="dark"] .hot-card {
+    background: linear-gradient(135deg, #2a2018 0%, #1f2937 100%);
+    border: 1px solid #5a3e28;
+}
+
+.btn-hot {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: white;
+}
+.btn-hot:hover {
+    background: linear-gradient(135deg, #fb923c, #f97316);
+    color: white;
+}
+
 /* --- 导航栏直播链接 — 与其他 nav-link 保持一致，无特殊背景 --- */
 .live-link {
     color: rgba(255,255,255,0.85);
