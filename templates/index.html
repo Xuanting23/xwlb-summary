@@ -158,16 +158,6 @@
             <a href="https://tv.cctv.com/lm/xwlb/day/{{ date_compact }}.shtml" target="_blank" rel="noopener" class="btn btn-live">📺 观看回放</a>
         </div>
 
-        {# 快速操作 #}
-        <div class="side-card">
-            <h2>🔗 快速操作</h2>
-            <div class="quick-actions">
-                <a href="/history" class="btn btn-outline">📅 查看历史</a>
-                <button onclick="manualFetch()" class="btn btn-primary">🔄 立即刷新</button>
-            </div>
-            <p id="fetch-status" class="fetch-status"></p>
-        </div>
-
     </aside>
 </div>
 
@@ -180,9 +170,7 @@
     <p class="text-muted">在摘要生成之前，您可以先观看直播。</p>
     <div class="empty-actions">
         <a href="https://tv.cctv.com/live/cctv13/" target="_blank" rel="noopener" class="btn btn-live btn-lg">📺 观看 CCTV-13 新闻直播</a>
-        <button onclick="manualFetch()" class="btn btn-primary btn-lg">🔄 立即获取今日摘要</button>
     </div>
-    <p id="fetch-status" class="fetch-status"></p>
 </div>
 {% endif %}
 
@@ -214,34 +202,5 @@ function toggleOriginal(btn) {
     }
 }
 
-async function manualFetch() {
-    const btn = document.querySelector('button[onclick="manualFetch()"]');
-    const status = document.getElementById('fetch-status');
-    if (!btn || !status) return;
-
-    btn.disabled = true;
-    btn.textContent = '⏳ 获取中...';
-    status.textContent = '';
-
-    try {
-        const resp = await fetch('/api/fetch-now', { method: 'POST' });
-        const data = await resp.json();
-
-        if (resp.ok) {
-            status.textContent = '✅ ' + data.message + ' — 页面即将刷新';
-            status.className = 'fetch-status success';
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            status.textContent = '❌ ' + (data.error || '操作失败');
-            status.className = 'fetch-status error';
-        }
-    } catch (e) {
-        status.textContent = '❌ 网络错误，请稍后重试';
-        status.className = 'fetch-status error';
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '🔄 立即刷新';
-    }
-}
 </script>
 {% endblock %}

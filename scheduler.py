@@ -45,8 +45,15 @@ def _poll_and_summarize() -> None:
     today = date.today()
     today_str = today.isoformat()
 
-    # 检查是否超过截止时间
     now = datetime.now()
+
+    # 检查是否已到首播时间（CronTrigger hour 范围 19-21 会包含 19:00/19:10/19:20，拦截掉）
+    start_time = now.replace(hour=POLL_START_HOUR, minute=POLL_START_MINUTE, second=0, microsecond=0)
+    if now < start_time:
+        # 还没到首播时间，跳过本轮（预估下一轮就到点了）
+        return
+
+    # 检查是否超过截止时间
     deadline = now.replace(hour=POLL_DEADLINE_HOUR, minute=POLL_DEADLINE_MINUTE, second=0, microsecond=0)
     if now > deadline:
         logger.info(f"已超过截止时间 {POLL_DEADLINE_HOUR:02d}:{POLL_DEADLINE_MINUTE:02d}，停止轮询")
